@@ -1,4 +1,7 @@
-import { auth } from './api/axios.js';
+// Use absolute path to avoid relative resolution issues when the page is under a
+// nested route (e.g. /login). Leading slash ensures browser requests
+// /static/js/api/axios.js regardless of current URL path.
+import { auth } from '/static/js/api/axios.js';
 
 
 class LoginForm {

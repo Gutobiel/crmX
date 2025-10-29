@@ -48,3 +48,15 @@ export function createAuthenticatedAxios() {
     });
     return instance;
 }
+
+// Export an `auth` object for convenience (and maintain backward compatibility
+// with modules that import { auth } from this file).
+const auth = {
+    login,
+    logout,
+    getAccessToken,
+    isAuthenticated,
+    createAuthenticatedAxios,
+};
+
+export { auth };

@@ -1,5 +1,7 @@
 // static/js/api/axios.js
-import { auth } from './auth.js';
+// Import auth using absolute static path to avoid incorrect relative resolution
+// when the page URL includes a path segment (for example /login).
+import { auth } from '/static/js/api/auth.js';
 export { auth };
 
 const api = axios.create({

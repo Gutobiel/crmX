@@ -14,6 +14,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -278,3 +279,9 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'CRM API - ARCX Soluções Inteligente',
     'VERSION': '1.0.0',
 }
+
+# Allow authentication by email or username (falls back to default ModelBackend)
+AUTHENTICATION_BACKENDS = [
+    'authentication.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]

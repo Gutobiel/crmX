@@ -149,4 +149,10 @@ const elementsApi = {
 	async deleteElement(id) { await ensureAxios(); await axios.delete(`${API_BASE_URL}/elements/${id}/`); }
 };
 
-export { auth, boardsApi, elementsApi };
+// API endpoints para workspaces (simples: listar e criar)
+const workspacesApi = {
+	async list() { await ensureAxios(); const response = await axios.get(`${API_BASE_URL}/workspace/`); return response.data; },
+	async create(data) { await ensureAxios(); const response = await axios.post(`${API_BASE_URL}/workspace/`, data); return response.data; },
+};
+
+export { auth, boardsApi, elementsApi, workspacesApi };

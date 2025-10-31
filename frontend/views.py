@@ -4,6 +4,7 @@ from functools import wraps
 from django.http import JsonResponse
 import jwt
 from django.conf import settings
+from django.contrib.auth import logout
 
 def jwt_required(view_func):
     @wraps(view_func)
@@ -27,10 +28,11 @@ def jwt_required(view_func):
     return wrapped_view
 
 def login_view(request):
-    if request.headers.get('Authorization'):
-        return redirect('home')
     return render(request, 'login/login.html')
 
-@jwt_required
 def home(request):
     return render(request, 'home/home.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')

@@ -1,7 +1,5 @@
-// Use absolute path to avoid relative resolution issues when the page is under a
-// nested route (e.g. /login). Leading slash ensures browser requests
-// /static/js/api/axios.js regardless of current URL path.
-import { auth } from '/static/js/api/axios.js';
+// Import auth directly from the source to avoid circular dependencies
+import { auth } from '/static/js/api/auth.js';
 
 
 class LoginForm {
@@ -49,9 +47,28 @@ class LoginForm {
         this.setLoading(true);
 
         try {
-            await auth.login(usernameOrEmail, password);
+            console.group('Login Attempt');
+            console.log('Attempting login with:', { usernameOrEmail });
+            
+            const tokens = await auth.login(usernameOrEmail, password);
+            console.log('Login Response:', tokens);
+            
+            const storedTokens = {
+                access: localStorage.getItem('access_token'),
+                refresh: localStorage.getItem('refresh_token')
+            };
+            console.log('Stored Tokens:', storedTokens);
+            console.log('Is Authenticated?', auth.isAuthenticated());
+            
+            if (!storedTokens.access) {
+                throw new Error('No access token stored after login');
+            }
+            
+            console.log('Login successful, redirecting to /home/');
+            console.groupEnd();
+            
             // Redireciona após login bem-sucedido
-            window.location.href = '/dashboard/';
+            window.location.href = '/home/';
         } catch (err) {
             let message = 'Erro ao autenticar.';
             if (err?.response?.status === 401) {
@@ -122,3 +139,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('Login script loaded');
+console.log('Token', auth.getAccessToken()
+)

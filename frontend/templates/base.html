@@ -1,15 +1,179 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Meu Projeto{% endblock %}</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard ARCX{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Base CSS - Sidebar e Header -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <main>
-        {% block content %}
-        {% endblock %}
+    <!-- Overlay Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Cabeçalho do Sidebar -->
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-chart-line"></i>
+                <span>ARCX</span>
+            </div>
+        </div>
+
+        <!-- Seção Dropdown com Busca -->
+        <div class="dropdown-section">
+            <div class="dropdown-header">
+                <div class="dropdown-content">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Áreas de trabalho</span>
+                </div>
+                <div class="dropdown-actions">
+                    <button class="search-btn" id="searchBtn" title="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="add-btn" id="addBtn" title="Adicionar">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Campo de Busca (oculto inicialmente) -->
+            <div class="search-field" id="searchField">
+                <input type="text" id="searchInput" placeholder="Buscar...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+
+        <!-- Menu Items -->
+        <nav class="menu-items">
+            {% if menu_items %}
+                {% for item in menu_items %}
+                <div class="menu-item {% if item.active %}active{% endif %}" data-section="{{ item.section }}">
+                    <i class="{{ item.icon }}"></i>
+                    <span>{{ item.name }}</span>
+                    {% if item.badge %}
+                    <span class="item-badge">{{ item.badge }}</span>
+                    {% endif %}
+                    {% if item.indicator %}
+                    <span class="item-indicator"></span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Menu padrão de exemplo -->
+                <div class="menu-item active" data-section="contratos">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Contratos</span>
+                </div>
+                <div class="menu-item" data-section="saldo-contrato">
+                    <i class="fas fa-wallet"></i>
+                    <span>Saldo Contrato</span>
+                    <span class="item-badge">3</span>
+                </div>
+                <div class="menu-item" data-section="saldo-sebrae">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Saldo SEBRAE</span>
+                </div>
+                <div class="menu-item" data-section="custo-colaboradores">
+                    <i class="fas fa-users"></i>
+                    <span>Custo Colaboradores</span>
+                </div>
+                <div class="menu-item" data-section="fluxo-caixa">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Fluxo de Caixa</span>
+                </div>
+            {% endif %}
+        </nav>
+
+        <!-- Logo ARCX -->
+        <div class="sidebar-logo-section">
+            <div class="arcx-text">
+                <div class="arcx-title">ARCX</div>
+                <div class="arcx-subtitle">GESTÃO INTEGRADA</div>
+            </div>
+        </div>
+
+        <!-- Rodapé Sidebar -->
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {% if user.first_name and user.last_name %}
+                        {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                    {% else %}
+                        {{ user.username.0|upper }}
+                    {% endif %}
+                </div>
+                <div class="user-details">
+                    <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="user-role">{{ user_role|default:"Usuário" }}</div>
+                </div>
+            </div>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;" id="logoutForm">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn" id="logoutBtn" title="Sair">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Script para lidar com o logout -->
+    <script type="module">
+        import { auth } from '/static/js/api/auth.js';
+        
+        document.getElementById('logoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Limpa os tokens do localStorage
+            auth.logout();
+            // Submete o formulário para fazer o logout no backend
+            this.submit();
+        });
+    </script>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <!-- Header da Página -->
+        <header class="page-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title" id="pageTitle">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        {% if notification_count %}
+                        <span class="notification-badge">{{ notification_count }}</span>
+                        {% endif %}
+                    </button>
+                    <button class="header-btn" title="Configurações">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Área de Conteúdo -->
+        <div class="content-area">
+            {% block content %}
+            <!-- O conteúdo específico de cada página será injetado aqui -->
+            {% endblock %}
+        </div>
     </main>
+
+    <!-- JavaScript Mínimo -->
+    <script src="{% static 'js/base.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

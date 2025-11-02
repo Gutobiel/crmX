@@ -36,3 +36,11 @@ def home(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+def home2(request):
+    return render(request, "home/home2.html")
+
+
+def login_page(request):
+    return render(request, "login/login2.html")

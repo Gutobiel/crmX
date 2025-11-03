@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      CRMX |{% block title %}
+        Meu Projeto
+      {% endblock %}
+    </title>
+    <!-- favicon -->
+    <link rel="shortcut icon" href="{% static 'assets/logo-arcx-3.png' %}" type="image/x-icon" />
+    <!-- importando css personalizado -->
+    <link rel="stylesheet" href="{% static 'css/not-logged-style.css' %}" />
+    <!-- cdn bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <!-- icons bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <!-- fonte inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- font-awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  </head>
+
+  <body>
+    <header></header>
+
+    <main class="d-flex flex-column flex-lg-row min-vh-100">
+      <div class="w-100 w-lg-75 p-5 d-flex flex-column align-items-center justify-content-between">
+        <div class="text-center">
+          <h1><span class="text-white">CRM</span><span class="text-danger">X</span></h1>
+          <span class="text-white">Gerencie Com Inteligência</span>
+        </div>
+        <div class="d-none d-lg-block">
+          <img src="{% static 'assets/logo-arcx-1.png' %}" alt="Imagem de fundo" class="img-fluid rounded" />
+        </div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+
+      <div class="w-100 p-5">
+        {% block content %}
+
+        {% endblock %}
+      </div>
+    </main>
+
+    <footer></footer>
+
+    <!-- cdn bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <!-- dark mode -->
+    <script src="{% static 'js/dark-mode.js' %}"></script>
+  </body>
+</html>

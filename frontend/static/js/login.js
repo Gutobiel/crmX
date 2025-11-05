@@ -1,5 +1,4 @@
-// Import auth directly from the source to avoid circular dependencies
-import { auth } from '/static/js/api/auth.js';
+import { auth } from './api/auth.js';
 
 
 class LoginForm {

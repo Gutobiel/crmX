@@ -1,0 +1,285 @@
+
+<!-- Aqui temos todas as pastas (boards) criadas dentro desta area de trabalho   -->
+<!-- Botão apagar area de trabalho (avisar que esta ação apagara todos os dados incluidos nele) -->
+<!-- Renomear area de trabalho(Titulo) -->
+
+<!-- Participantes e membros -->
+<!-- Adicionar membro, retirar, compatilhar -->
+
+
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Área de Trabalho{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        .editable-wrapper {
+            display: inline-block;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .editable-wrapper[contenteditable="true"] {
+            border-bottom: 2px dashed #333781;
+            padding: 0 4px;
+            outline: none;
+        }
+
+        .editable-wrapper[contenteditable="true"]:focus {
+            border-bottom: 2px solid #333781;
+            background-color: rgba(51, 55, 129, 0.05);
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .workspace-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e1e5e9;
+        }
+
+        .workspace-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .workspace-title {
+            color: #302754;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .workspace-menu {
+            color: #666;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .workspace-menu:hover {
+            background: #f4f5f7;
+            color: #333781;
+        }
+
+        .workspace-stats {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .workspace-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .workspace-members {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .member-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #333781;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-right: -8px;
+            border: 2px solid white;
+        }
+
+        .more-members {
+            background: #f4f5f7;
+            color: #666;
+        }
+
+        .btn-filter.active {
+            background: #333781;
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block page_title %}
+    <div class="editable-wrapper" contenteditable="true" id="workspaceTitle">
+        {% if workspace.nome %}{{ workspace.nome }}{% else %}Nova Área de Trabalho{% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Board Header -->
+    <div class="board-header">
+        <div class="board-title">
+            <div class="board-actions">
+                <button class="btn-action" id="filterBtn">
+                    <i class="fas fa-filter"></i>
+                    Filtrar
+                </button>
+                <button class="btn-action" id="exportBtn">
+                    <i class="fas fa-download"></i>
+                    Exportar
+                </button>
+                <a href="{% url 'new_workspace' %}" class="btn-primary" id="newWorkspaceBtn" title="Nova Área de Trabalho">
+                        <i class="fas fa-plus"></i>
+                        Nova Área de Trabalho
+                    </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="btn-filter active" data-filter="my-folders">
+                <i class="fas fa-folder"></i>
+                Minhas Pastas
+            </button>
+            <button class="btn-filter" data-filter="shared">
+                <i class="fas fa-share-alt"></i>
+                Compartilhadas Comigo
+            </button>
+        </div>
+        <div class="toolbar-right">
+            <button class="btn-add-folder btn-primary">
+                <i class="fas fa-folder-plus"></i>
+                Nova Pasta
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid de Áreas de Trabalho -->
+    <div class="workspace-grid">
+        {% for workspace in workspaces %}
+        <div class="workspace-card">
+            <div class="workspace-header">
+                <h3 class="workspace-title">{{ workspace.nome }}</h3>
+                <button class="workspace-menu">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+            <div class="workspace-stats">
+                <div class="workspace-stat">
+                    <i class="fas fa-folder"></i>
+                    <span>{{ workspace.folders_count }} pastas</span>
+                </div>
+                <div class="workspace-stat">
+                    <i class="fas fa-users"></i>
+                    <span>{{ workspace.members_count }} membros</span>
+                </div>
+            </div>
+            <div class="workspace-members">
+                {% for member in workspace.members|slice:":3" %}
+                <div class="member-avatar" title="{{ member.name }}">
+                    {{ member.initials }}
+                </div>
+                {% endfor %}
+                {% if workspace.members|length > 3 %}
+                <div class="member-avatar more-members" title="Mais membros">
+                    +{{ workspace.members|length|add:"-3" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const workspaceTitle = document.getElementById('workspaceTitle');
+        
+        // Salvar o título quando perder o foco ou pressionar Enter
+        workspaceTitle.addEventListener('blur', saveWorkspaceTitle);
+        workspaceTitle.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                workspaceTitle.blur();
+            }
+        });
+
+        function saveWorkspaceTitle() {
+            const newTitle = workspaceTitle.textContent.trim();
+            if (!newTitle) {
+                workspaceTitle.textContent = 'Nova Área de Trabalho';
+                return;
+            }
+
+            // Aqui você pode adicionar a lógica para salvar o título via API
+            fetch('/api/v1/workspace/{{ workspace.id }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    nome: newTitle
+                })
+            })
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Erro ao salvar título:', error);
+                // Você pode adicionar uma notificação de erro aqui
+            });
+        }
+
+        // Função auxiliar para pegar o cookie do CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Filtros da toolbar
+        const filterButtons = document.querySelectorAll('.btn-filter');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                // Aqui você pode adicionar a lógica de filtro
+            });
+        });
+
+        // Botão de nova pasta
+        document.querySelector('.btn-add-folder').addEventListener('click', function() {
+            // Aqui você pode adicionar a lógica para criar nova pasta
+        });
+    });
+</script>
+{% endblock %}

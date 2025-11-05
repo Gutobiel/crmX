@@ -33,10 +33,43 @@ def login_view(request):
 def home(request):
     return render(request, 'home/home.html')
 
+def workspace(request):
+    return render(request, 'workspace/workspace.html')
+
+def new_workspace(request):
+    return render(request, 'workspace/new_workspace.html')
+
+def board(request):
+    return render(request, 'board/board.html')
+
+def new_board(request):
+    # Pass available workspaces to the new board form so the user can choose
+    from workspaces.models import Workspace
+
+    workspaces = Workspace.objects.all().order_by('nome')
+    return render(request, 'board/new_board.html', {'workspaces': workspaces})
+
+
+def workspace_detail(request, workspace_id):
+    """Renderiza a página de detalhe da área de trabalho (lista de boards desse workspace)."""
+    from workspaces.models import Workspace
+
+    workspace = Workspace.objects.filter(id=workspace_id).first()
+    if not workspace:
+        # redireciona para a listagem de workspaces se não existir
+        return render(request, 'workspace/workspace.html', {'error': 'Área de trabalho não encontrada.'})
+
+    # boards relacionados (related_name='boards' no modelo)
+    boards = workspace.boards.all().order_by('nome')
+
+    return render(request, 'workspace/detail.html', {
+        'workspace': workspace,
+        'boards': boards,
+    })
+
 def logout_view(request):
     logout(request)
     return redirect('login')
-
 
 def home2(request):
     return render(request, "home/home2.html")

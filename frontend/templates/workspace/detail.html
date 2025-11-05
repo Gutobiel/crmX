@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ workspace.nome }} - Área de Trabalho{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block page_title %}
+    {{ workspace.nome }}
+{% endblock %}
+
+{% block content %}
+    <div class="board-header">
+        <div class="board-title">
+            <div class="board-actions">
+                <a href="{% url 'new_board' %}" class="btn-action">
+                    <i class="fas fa-plus"></i>
+                    Nova Pasta
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace-grid">
+        {% if boards %}
+            {% for board in boards %}
+            <div class="workspace-card">
+                <div class="workspace-header">
+                    <h3 class="workspace-title">{{ board.nome }}</h3>
+                    <a class="workspace-menu" href="/board/{{ board.id }}/">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="workspace-stats">
+                    <div class="workspace-stat">
+                        <i class="fas fa-clock"></i>
+                        <span>Criado: {{ board.created_at|date:'d/m/Y' }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-workspaces">
+                Nenhuma pasta criada neste workspace ainda.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

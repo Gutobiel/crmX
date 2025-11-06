@@ -8,13 +8,13 @@
 {% endblock %}
 
 {% block page_title %}
-    Nova Pasta de Trabalho
+    Pasta de Trabalho
 {% endblock %}
 
 {% block content %}
 <div class="new-board-container">
     <div class="form-header">
-        <h2>Criar Nova Planilha</h2>
+        <h2>Criar Nova Pasta de Trabalho</h2>
         <p>Configure aqui seus projetos e conteúdos.</p>
     </div>
 
@@ -143,7 +143,7 @@
                 }
 
                 const board = await response.json();
-                // Após criar, abrir a página da área de trabalho relacionada
+                
                 window.location.href = `/workspace/${workspaceId}/`;
 
             } catch (error) {

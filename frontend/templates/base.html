@@ -115,7 +115,7 @@
                 </div>
             {% endif %}
         </nav>
-
+    
         <!-- Logo ARCX -->
         <div class="sidebar-logo-section">
             <div class="arcx-text">
@@ -148,16 +148,60 @@
         </div>
     </aside>
 
-    <!-- Script para lidar com o logout -->
+    <!-- Scripts para lidar com logout e workspace -->
     <script type="module">
         import { auth } from '/static/js/api/auth.js';
         
+        // Logout handler
         document.getElementById('logoutForm').addEventListener('submit', function(e) {
             e.preventDefault();
             // Limpa os tokens do localStorage
             auth.logout();
             // Submete o formulário para fazer o logout no backend
             this.submit();
+        });
+
+        // Workspace selection handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const expandBtn = document.getElementById('expandBtn');
+            const workspacesList = document.getElementById('workspacesList');
+            
+            // Toggle workspace list
+            expandBtn.addEventListener('click', function() {
+                const isHidden = workspacesList.style.display === 'none';
+                workspacesList.style.display = isHidden ? 'block' : 'none';
+                expandBtn.querySelector('i').style.transform = isHidden ? 'rotate(180deg)' : '';
+            });
+
+            // Handle workspace selection
+            const workspaceItems = document.querySelectorAll('.workspace-item');
+            workspaceItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Remove active class from all items
+                    workspaceItems.forEach(wi => wi.classList.remove('active'));
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Update the workspace name in the header
+                    const workspaceName = this.querySelector('span').textContent;
+                    const workspaceHeader = document.querySelector('.dropdown-content span');
+                    workspaceHeader.textContent = workspaceName;
+                    
+                    // Hide the workspace list
+                    workspacesList.style.display = 'none';
+                    expandBtn.querySelector('i').style.transform = '';
+
+                    // Store the active workspace in localStorage
+                    localStorage.setItem('activeWorkspace', workspaceName);
+                });
+            });
+
+            // Restore active workspace from localStorage if available
+            const savedWorkspace = localStorage.getItem('activeWorkspace');
+            if (savedWorkspace) {
+                const workspaceHeader = document.querySelector('.dropdown-content span');
+                workspaceHeader.textContent = savedWorkspace;
+            }
         });
     </script>
 

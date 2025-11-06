@@ -580,3 +580,35 @@ a {
         width: 100%;
     }
 }
+
+.workspace-select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.workspace-select {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 14px;
+    padding: 6px 24px 6px 8px;
+    appearance: none;
+    cursor: pointer;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ddd;
+}
+
+.workspace-select:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.select-icon {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #aaa;
+}

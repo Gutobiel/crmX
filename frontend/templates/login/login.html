@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcX - CRM </title>
+    {% load static %}
+    <link rel="shortcut icon" href="{% static 'assets/logo-arcx-3.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/stylelogin.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <h1>CRM Gestão</h1>
+                </div>
+                <p class="subtitle">Gerencie seus negócios com inteligência</p>
+            </div>
+
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Email ou Usuário</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="username" name="username" placeholder="Digite seu email ou usuário" required>
+                            <span class="error-message" id="usernameError"></span>
+                        </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
+                        <span class="error-message" id="passwordError"></span>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Lembrar de mim</label>
+                    </div>
+                    <a href="#" class="forgot-password">Esqueceu a senha?</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span class="btn-text">Entrar</span>
+                    <div class="btn-loader" id="btnLoader">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+
+                <div class="divider">
+                    <span>ou</span>
+                </div>
+
+                <div class="social-login">
+                    <button type="button" class="social-btn google-btn">
+                        <i class="fab fa-google"></i>
+                        Continuar com Google
+                    </button>
+                    <button type="button" class="social-btn microsoft-btn">
+                        <i class="fab fa-microsoft"></i>
+                        Continuar com Microsoft
+                    </button>
+                </div>
+
+                <div class="signup-link">
+                    <p>Não tem uma conta? <a href="#">Criar conta</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Logo fixo no canto superior esquerdo -->
+        <div class="top-logo">
+            <i class="fas fa-chart-line"></i>
+            <span>CRM GESTÃO EMPRESARIAL</span>
+        </div>
+    </div>
+
+</body>
+    <script src="{% static 'js/login.js' %}" type="module"></script>
+</html>

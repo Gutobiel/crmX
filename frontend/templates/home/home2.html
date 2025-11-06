@@ -1,0 +1,283 @@
+{% extends 'base_logged.html' %}
+
+{% block title %}
+  Início
+{% endblock %}
+
+{% block header %}
+  Contratos
+{% endblock %}
+
+{% block content %}
+  <div class="tabela-container table-responsive">
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
+        <tr>
+          <th>
+            <span class="d-inline-block text-truncate" title="Elemento">Elemento</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="A arroz arroz arroz arroz">A arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="B arroz arroz arroz arroz">B arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="C arroz arroz arroz arroz">C arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="D arroz arroz arroz arroz">D arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="E arroz arroz arroz arroz">E arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="F arroz arroz arroz arroz">F arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="G arroz arroz arroz arroz">G arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="H arroz arroz arroz arroz">H arroz arroz arroz arroz</span>
+          </th>
+          <th>
+            <span class="d-inline-block text-truncate" title="I arroz arroz arroz arroz">I arroz arroz arroz arroz</span>
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td class="tb-action">
+            <div class="d-flex align-items-center gap-2" style="min-width: 0;">
+              <!-- Botão de ações -->
+              <div class="dropdown flex-shrink-0">
+                <button class="btn p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots-vertical"></i></button>
+                <!-- O Bootstrap posiciona os dropdowns com Popper.js, que tenta calcular automaticamente se há espaço suficiente “pra baixo” — se não houver, ele inverte e abre pra cima. Ao colocar o botão dentro de um contêiner d-flex ou com overflow: hidden (como ocorre no text-truncate), o Popper pode entender que o espaço visual está limitado e acabar invertendo a direção. -->
+                <ul class="dropdown-menu">
+                  <li>
+                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalVisualizar">Visualizar</button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Texto truncado -->
+              <!-- <p class="mb-0 flex-grow-1" title="Ver detalhes"><a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample" class="text-decoration-none text-body"><i class="bi bi-eye"></i></a></p> -->
+              <!-- removi o text-truncate -->
+              <p class="mb-0 flex-grow-1" title="Ver detalhes">
+                <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample" class="text-body">Descrição</a>
+              </p>
+
+              <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalVisualizar"><i class="bi bi-chat-dots"></i></button>
+            </div>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="1 arroz arroz arroz arroz">1 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="2 arroz arroz arroz arroz">2 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="3 arroz arroz arroz arroz">3 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="4 arroz arroz arroz arroz">4 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="5 arroz arroz arroz arroz">5 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="6 arroz arroz arroz arroz">6 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="7 arroz arroz arroz arroz">7 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="8 arroz arroz arroz arroz">8 arroz arroz arroz arroz</span>
+          </td>
+
+          <td>
+            <span class="d-inline-block text-truncate" title="9 arroz arroz arroz arroz">9 arroz arroz arroz arroz</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="50">Não há registros (caso lista retornada do back-end esteja vazia, exibe isso)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="collapse mt-5" id="collapseExample">
+    <div class="tabela-container table-responsive">
+      <table class="table table-striped table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>
+              <span class="d-inline-block text-truncate" title="Subelemento">Subelemento</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="A arroz arroz arroz arroz">A arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="B arroz arroz arroz arroz">B arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="C arroz arroz arroz arroz">C arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="D arroz arroz arroz arroz">D arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="E arroz arroz arroz arroz">E arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="F arroz arroz arroz arroz">F arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="G arroz arroz arroz arroz">G arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="H arroz arroz arroz arroz">H arroz arroz arroz arroz</span>
+            </th>
+            <th>
+              <span class="d-inline-block text-truncate" title="I arroz arroz arroz arroz">I arroz arroz arroz arroz</span>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td class="tb-action">
+              <span class="d-inline-block text-truncate" title="Descrição">Descrição</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="1 arroz arroz arroz arroz">1 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="2 arroz arroz arroz arroz">2 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="3 arroz arroz arroz arroz">3 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="4 arroz arroz arroz arroz">4 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="5 arroz arroz arroz arroz">5 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="6 arroz arroz arroz arroz">6 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="7 arroz arroz arroz arroz">7 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="8 arroz arroz arroz arroz">8 arroz arroz arroz arroz</span>
+            </td>
+
+            <td>
+              <span class="d-inline-block text-truncate" title="9 arroz arroz arroz arroz">9 arroz arroz arroz arroz</span>
+            </td>
+          </tr>
+
+          <tr>
+            <td colspan="50">Não há registros (caso lista retornada do back-end esteja vazia, exibe isso)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% comment %}Modal para Visualizar{% endcomment %}
+  <div class="modal fade" id="modalVisualizar" tabindex="-1" aria-labelledby="modalVisualizarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title" id="modalVisualizarLabel">Detalhes</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <dl class="row">
+            <div class="col-sm-6 my-2">
+              <dt>A:</dt>
+              <dd id="1">1</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>B:</dt>
+              <dd id="2">2</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>C:</dt>
+              <dd id="3">3</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>D:</dt>
+              <dd id="4">4</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>E:</dt>
+              <dd id="5">5</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>F:</dt>
+              <dd id="6">6</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>G:</dt>
+              <dd id="7">7</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>H:</dt>
+              <dd id="8">8</dd>
+            </div>
+
+            <div class="col-sm-6 my-2">
+              <dt>I:</dt>
+              <dd id="9">9</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts para Modals -->
+  <script>
+    const modalVisualizar = document.getElementById('modalVisualizar')
+    modalVisualizar.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget
+      document.getElementById('A').textContent = button.getAttribute('1')
+      document.getElementById('B').textContent = button.getAttribute('2')
+      document.getElementById('C').textContent = button.getAttribute('3')
+      document.getElementById('D').textContent = button.getAttribute('4')
+      document.getElementById('E').textContent = button.getAttribute('5')
+    })
+  </script>
+{% endblock %}

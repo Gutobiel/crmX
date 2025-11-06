@@ -59,9 +59,6 @@ def workspace_detail(request, workspace_id):
         # redireciona para a listagem de workspaces se não existir
         return render(request, 'workspace/workspace.html', {'error': 'Área de trabalho não encontrada.'})
 
-    # Save the selected workspace in the session
-    request.session['active_workspace_id'] = workspace.id
-
     # boards relacionados (related_name='boards' no modelo)
     boards = workspace.boards.all().order_by('nome')
 

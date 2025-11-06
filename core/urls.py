@@ -16,6 +16,6 @@ urlpatterns = [
     path('api/v1/', include('subElements.urls')),
     #path('api/v1/', include('users.urls')),
     path('api/v1/', include('workspaces.urls')),
-    path('admin', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', include('frontend.urls')),
 ]

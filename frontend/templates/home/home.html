@@ -1,8 +1,233 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Início{% endblock %}
+{% block title %}Dashboard - Home{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block page_title %}
+    Estrutura de Contratos
+{% endblock %}
 
 {% block content %}
-<h2>Bem-vindo!</h2>
-<p>Esta é a página inicial do seu site Django.</p>
+    <!-- Board Header -->
+    <div class="board-header">
+        <div class="board-title">
+            <h2>Estrutura de Contratos</h2>
+            <div class="board-actions">
+                <button class="btn-action">
+                    <i class="fas fa-filter"></i>
+                    Filtrar
+                </button>
+                <button class="btn-action">
+                    <i class="fas fa-download"></i>
+                    Exportar
+                </button>
+                <button class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Novo Contrato
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="btn-filter">
+                <i class="fas fa-sliders-h"></i>
+                Todos os Status
+            </button>
+            <button class="btn-filter">
+                <i class="fas fa-user"></i>
+                Todas Empresas
+            </button>
+        </div>
+    </div>
+
+    <!-- Worksheet Section -->
+    <div class="worksheet-section">
+        <div class="worksheet-header">
+            <div class="worksheet-title">
+                <i class="fas fa-chevron-down"></i>
+                <span>Planilha Principal</span>
+            </div>
+            <div>
+                <button class="btn-worksheet" title="Expandir tudo">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+                <button class="btn-worksheet" title="Configurações">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="contracts-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" id="selectAll">
+                        </th>
+                        <th class="element-col">Elemento</th>
+                        <th class="company-col">Empresa</th>
+                        <th class="object-col">Objeto</th>
+                        <th class="qty-col">Qtd Total Itens</th>
+                        <th class="value-prev-col">Valor Total Anterior</th>
+                        <th class="value-adj-col">Valor Total Reajustado</th>
+                        <th class="docs-col">Documentação</th>
+                        <th class="actions-col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contract in contracts %}
+                    <!-- Contract Row -->
+                    <tr class="contract-row" data-contract-id="{{ contract.id }}">
+                        <td class="checkbox-col">
+                            <input type="checkbox" name="contract_select" value="{{ contract.id }}">
+                        </td>
+                        <td class="element-col">
+                            <div class="element-info">
+                                <span class="element-number">{{ contract.element_number }}</span>
+                                <div class="element-icons">
+                                    <i class="fas fa-chevron-down toggle-subelements" title="Expandir"></i>
+                                    <i class="fas fa-paperclip" title="Anexos"></i>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="company-col">
+                            <span class="company-tag">{{ contract.company_code }}</span>
+                        </td>
+                        <td class="object-col">
+                            <span class="object-text">{{ contract.object_description }}</span>
+                        </td>
+                        <td class="qty-col">
+                            <span class="qty-value">{{ contract.total_quantity }}</span>
+                        </td>
+                        <td class="value-prev-col">
+                            <span class="value-amount">R$ {{ contract.previous_value|floatformat:2 }}</span>
+                        </td>
+                        <td class="value-adj-col">
+                            <span class="value-amount">R$ {{ contract.adjusted_value|floatformat:2 }}</span>
+                        </td>
+                        <td class="docs-col">
+                            <span class="doc-percentage">{{ contract.documentation_percent }}%</span>
+                        </td>
+                        <td class="actions-col">
+                            <button class="btn-icon" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Subelements Section (oculto inicialmente) -->
+                    <tr class="subelements-section" style="display: none;" data-parent="{{ contract.id }}">
+                        <td colspan="9">
+                            <table class="subelements-table">
+                                <thead>
+                                    <tr>
+                                        <th class="subelement-col">Subelemento</th>
+                                        <th class="quantity-col">Quantidade</th>
+                                        <th class="unit-value-col">Valor Unitário</th>
+                                        <th class="total-value-col">Valor Total</th>
+                                        <th class="ipc-col">IPC</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subelement in contract.subelements.all %}
+                                    <tr>
+                                        <td class="subelement-col">
+                                            <div class="subelement-info">
+                                                <i class="fas fa-cube"></i>
+                                                <span>{{ subelement.description }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="quantity-col">{{ subelement.quantity }}</td>
+                                        <td class="unit-value-col">R$ {{ subelement.unit_value|floatformat:2 }}</td>
+                                        <td class="total-value-col">R$ {{ subelement.total_value|floatformat:2 }}</td>
+                                        <td class="ipc-col">{{ subelement.ipc_percent }}%</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: #999;">
+                                            Nenhum subelemento cadastrado
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="add-subelement-row">
+                                        <td colspan="5">
+                                            <button class="btn-add-subelement">
+                                                <i class="fas fa-plus"></i>
+                                                Adicionar Subelemento
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #999;">
+                            <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
+                            Nenhum contrato cadastrado
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Add Element Row -->
+            <div class="add-element-row">
+                <button class="btn-add-element">
+                    <i class="fas fa-plus-circle"></i>
+                    Adicionar Elemento
+                </button>
+            </div>
+        </div>
+
+        <!-- Totals Row -->
+        <div class="totals-row">
+            <div class="total-info">
+                Total de linhas: <span class="total-count">{{ contracts.count }}</span> | 
+                Qtd Total Itens: <span class="total-qty">{{ total_quantity }}</span> | 
+                Valor Total: <span class="total-value">R$ {{ total_value|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Expandir/colapsar subelementos
+        document.querySelectorAll('.toggle-subelements').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const contractId = row.dataset.contractId;
+                const subelementsRow = document.querySelector(`.subelements-section[data-parent="${contractId}"]`);
+
+                if (subelementsRow) {
+                    if (subelementsRow.style.display === 'none') {
+                        subelementsRow.style.display = '';
+                        this.classList.remove('fa-chevron-down');
+                        this.classList.add('fa-chevron-up');
+                    } else {
+                        subelementsRow.style.display = 'none';
+                        this.classList.remove('fa-chevron-up');
+                        this.classList.add('fa-chevron-down');
+                    }
+                }
+            });
+        });
+
+        // Select all checkboxes
+        document.getElementById('selectAll')?.addEventListener('change', function() {
+            document.querySelectorAll('input[name="contract_select"]').forEach(function(checkbox) {
+                checkbox.checked = this.checked;
+            }.bind(this));
+        });
+    </script>
 {% endblock %}

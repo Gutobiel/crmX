@@ -1,0 +1,90 @@
+:root {
+    --header-h: 64px;
+}
+
+header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+    /* z-index: 1; */
+}
+
+/* md e menor — header fica global */
+@media (max-width:991px) {
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    /* dá espaço abaixo do header fixo */
+    body {
+        padding-top: var(--header-h);
+    }
+
+    #sidebar.collapse:not(.show)+#main-col {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* lg ou maior — header só afeta a coluna da direita */
+@media (min-width:992px) {
+    header {
+        position: sticky;
+        top: 0;
+    }
+
+    main {
+        padding-top: 1rem;
+        /* só para dar um respiro visual */
+    }
+}
+
+@media (min-width:992px) {
+    #sidebar {
+        display: block !important;
+    }
+}
+
+#sidebar {
+    min-width: 220px;
+    background: linear-gradient(135deg, #302754 0%, #070a4a 100%);
+    color: #DEE2E6;
+}
+
+#sidebar a {
+    color: #DEE2E6;
+}
+
+#sidebar ul li {
+    background: transparent;
+    color: #DEE2E6;
+}
+
+#sidebar ul li a {
+    color: inherit;
+    padding: .5rem;
+    border-radius: .5rem;
+    display: block;
+    width: 100%;
+    text-decoration: none;
+}
+
+#sidebar ul li a:hover {
+    background-color: rgba(255, 255, 255, .1);
+}
+
+.modal {
+    z-index: 1;
+}
+
+.tabela-container table {
+    overflow: hidden;
+}
+
+.tabela-container .text-truncate {
+    max-width: 120px;
+}

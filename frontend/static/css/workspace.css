@@ -1,0 +1,258 @@
+/* Estilos para formulários de workspace */
+.new-workspace-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.form-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.form-header h2 {
+    color: #302754;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.form-header p {
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.form-section {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #302754;
+    font-weight: 500;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    border-color: #333781;
+    box-shadow: 0 0 0 2px rgba(51, 55, 129, 0.1);
+    outline: none;
+}
+
+.form-help {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel {
+    background: #f4f5f7;
+    border: 1px solid #e1e5e9;
+    color: #333781;
+}
+
+.btn-cancel:hover {
+    background: #e8e9ed;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #333781, #302754);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(51, 55, 129, 0.3);
+}
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    top: 50%;
+    left: 50%;
+    margin: -0.5rem 0 0 -0.5rem;
+    border: 2px solid #fff;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: button-loading-spinner 0.75s linear infinite;
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+.workspace-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: #302754;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-input {
+    padding: 12px;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    border-color: #333781;
+    box-shadow: 0 0 0 2px rgba(51, 55, 129, 0.1);
+    outline: none;
+}
+
+.form-input::placeholder {
+    color: #999;
+}
+
+.form-help {
+    font-size: 12px;
+    color: #666;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-secondary {
+    background: #f4f5f7;
+    border: 1px solid #ddd;
+    color: #333781;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #e8e9ed;
+    border-color: #bbb;
+}
+
+/* Mensagens de erro/sucesso */
+.form-message {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.form-message.error {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.form-message.success {
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #16a34a;
+}
+
+/* Loading state */
+.btn-primary.loading,
+.btn-secondary.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn-primary.loading:after,
+.btn-secondary.loading:after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin: -8px 0 0 -8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: button-loading-spinner 0.75s linear infinite;
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}

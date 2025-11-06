@@ -1,0 +1,530 @@
+/* Board Header */
+
+.board-header {
+    padding: 20px 0;
+    border-bottom: 1px solid #e1e5e9;
+    margin-bottom: 20px;
+}
+
+.board-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.board-title h2 {
+    color: #302754;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.board-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-action {
+    background: #f4f5f7;
+    border: 1px solid #ddd;
+    color: #333781;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-action:hover {
+    background: #e8e9ed;
+    border-color: #bbb;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #333781, #302754);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(51, 55, 129, 0.3);
+}
+
+/* Toolbar */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #e1e5e9;
+    margin-bottom: 20px;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-filter {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    color: #666;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-filter:hover {
+    background: #f8f9fa;
+    border-color: #bbb;
+}
+
+/* Worksheet Section */
+
+.worksheet-section {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.worksheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e5e9;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.worksheet-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #302754;
+    font-size: 16px;
+}
+
+.worksheet-title i {
+    color: #666;
+    cursor: pointer;
+}
+
+.btn-worksheet {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.btn-worksheet:hover {
+    background: #e9ecef;
+    color: #302754;
+}
+
+/* Table Container */
+
+.table-container {
+    padding: 0;
+    overflow-x: auto;
+}
+
+/* Contracts Table */
+
+.contracts-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.contracts-table th,
+.contracts-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+    vertical-align: middle;
+}
+
+.contracts-table th {
+    background: #f8f9fa;
+    color: #302754;
+    font-weight: 600;
+    font-size: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.checkbox-col {
+    width: 40px;
+    text-align: center;
+}
+
+.element-col {
+    width: 120px;
+}
+
+.company-col {
+    width: 100px;
+}
+
+.object-col {
+    width: 300px;
+}
+
+.qty-col,
+.value-prev-col,
+.value-adj-col,
+.docs-col {
+    width: 120px;
+    text-align: right;
+}
+
+.actions-col {
+    width: 100px;
+    text-align: center;
+}
+
+.element-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.element-number {
+    color: #302754;
+    font-weight: 600;
+}
+
+.element-icons {
+    display: flex;
+    gap: 8px;
+}
+
+.element-icons i {
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.element-icons i:hover {
+    color: #c90022;
+}
+
+.company-tag {
+    background: #333781;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.object-text {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.qty-value,
+.value-amount {
+    color: #302754;
+    font-weight: 600;
+}
+
+.doc-percentage {
+    color: #666;
+}
+
+/* Subelements Section */
+
+.subelements-section {
+    border-top: 1px solid #e1e5e9;
+    background: #fafbfc;
+}
+
+.subelements-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.subelements-table th,
+.subelements-table td {
+    padding: 10px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+    vertical-align: middle;
+}
+
+.subelements-table th {
+    background: #f1f3f4;
+    color: #666;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.subelement-col {
+    width: 350px;
+}
+
+.quantity-col,
+.unit-value-col,
+.total-value-col,
+.ipc-col {
+    width: 100px;
+    text-align: right;
+}
+
+.subelement-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subelement-info i {
+    color: #666;
+    font-size: 14px;
+}
+
+.subelement-info span {
+    color: #302754;
+    font-size: 14px;
+}
+
+.subelements-table td {
+    font-size: 14px;
+    color: #302754;
+}
+
+.add-subelement-row td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: none;
+}
+
+.btn-add-subelement {
+    background: none;
+    border: 1px dashed #ddd;
+    color: #666;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 auto;
+}
+
+.btn-add-subelement:hover {
+    background: #f8f9fa;
+    border-color: #333781;
+    color: #333781;
+}
+
+/* Add Element Row */
+
+.add-element-row {
+    padding: 15px;
+    text-align: center;
+    background: #fafbfc;
+    border-top: 1px solid #e1e5e9;
+}
+
+.btn-add-element {
+    background: none;
+    border: 1px dashed #ddd;
+    color: #666;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto;
+}
+
+.btn-add-element:hover {
+    background: #f8f9fa;
+    border-color: #333781;
+    color: #333781;
+}
+
+/* Totals Row */
+
+.totals-row {
+    padding: 15px;
+    background: #f1f3f4;
+    border-top: 1px solid #e1e5e9;
+    border-radius: 0 0 8px 8px;
+}
+
+.total-info {
+    color: #302754;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.total-count,
+.total-qty,
+.total-value {
+    color: #c90022;
+    font-weight: 700;
+}
+
+/* Contract Row Hover */
+
+.contract-row:hover {
+    background: #f8f9fa;
+}
+
+.subelements-table tr:hover {
+    background: #f5f7fa;
+}
+
+/* Buttons */
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: #333781;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    margin-right: 5px;
+}
+
+.btn-icon:hover {
+    background: #f8f9fa;
+    color: #302754;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 1024px) {
+    .object-col {
+        width: 200px;
+    }
+
+    .qty-col,
+    .value-prev-col,
+    .value-adj-col,
+    .docs-col {
+        width: 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .board-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .board-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .toolbar-left {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .contracts-table {
+        font-size: 12px;
+    }
+
+    .contracts-table th,
+    .contracts-table td {
+        padding: 8px 10px;
+    }
+
+    .element-col,
+    .company-col,
+    .object-col {
+        width: auto;
+    }
+
+    .qty-col,
+    .value-prev-col,
+    .value-adj-col,
+    .docs-col,
+    .actions-col {
+        width: 70px;
+        padding: 8px 5px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .board-title h2 {
+        font-size: 18px;
+    }
+
+    .btn-action,
+    .btn-filter,
+    .btn-primary {
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+
+    .contracts-table {
+        font-size: 10px;
+    }
+
+    .contracts-table th,
+    .contracts-table td {
+        padding: 6px 5px;
+    }
+
+    .checkbox-col {
+        width: 30px;
+    }
+
+    .actions-col {
+        width: 50px;
+    }
+
+    .btn-icon {
+        padding: 3px;
+    }
+}

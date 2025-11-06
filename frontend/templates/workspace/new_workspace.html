@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nova Área de Trabalho{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
+{% endblock %}
+
+{% block page_title %}
+    Nova Área de Trabalho
+{% endblock %}
+
+{% block content %}
+<div class="new-workspace-container">
+    <div class="form-header">
+        <h2>Criar Nova Área de Trabalho</h2>
+        <p>Configure sua nova área de trabalho para começar a organizar seus projetos.</p>
+    </div>
+
+    <form id="newWorkspaceForm" class="form-section">
+        <!-- Campo Nome -->
+        <div class="form-group">
+            <label for="workspace-name">Nome da Área de Trabalho *</label>
+            <input 
+                type="text" 
+                id="workspace-name" 
+                name="nome" 
+                class="form-input"
+                required
+                maxlength="100"
+                placeholder="Digite um nome para sua área de trabalho"
+            >
+            <div class="form-help">
+                O nome deve ser único e identificar claramente sua área de trabalho
+            </div>
+            <div class="error-message" id="name-error"></div>
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="form-actions">
+            <button type="button" class="btn btn-cancel" id="cancelBtn">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-arrow-right"></i>
+                Pasta de Trabalho
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    import { auth } from '/static/js/api/auth.js';
+    
+    class NewWorkspaceForm {
+        constructor() {
+            this.form = document.getElementById('newWorkspaceForm');
+            this.nameInput = document.getElementById('workspace-name');
+            this.nameError = document.getElementById('name-error');
+            this.submitBtn = document.getElementById('submitBtn');
+            this.cancelBtn = document.getElementById('cancelBtn');
+            
+            this.init();
+        }
+
+        init() {
+            this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+            this.cancelBtn.addEventListener('click', () => this.handleCancel());
+            this.nameInput.addEventListener('input', () => this.clearError());
+        }
+
+        setLoading(loading) {
+            this.submitBtn.disabled = loading;
+            if (loading) {
+                this.submitBtn.classList.add('loading');
+            } else {
+                this.submitBtn.classList.remove('loading');
+            }
+        }
+
+        showError(message) {
+            this.nameError.textContent = message;
+            this.nameError.style.display = 'block';
+            this.nameInput.classList.add('error');
+        }
+
+        clearError() {
+            this.nameError.style.display = 'none';
+            this.nameInput.classList.remove('error');
+        }
+
+        handleCancel() {
+            window.history.back();
+        }
+
+        async handleSubmit(e) {
+            e.preventDefault();
+            this.clearError();
+
+            const nome = this.nameInput.value.trim();
+            if (!nome) {
+                this.showError('O nome da área de trabalho é obrigatório');
+                return;
+            }
+
+            this.setLoading(true);
+
+            try {
+                const response = await fetch('/api/v1/workspace/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${auth.getAccessToken()}`,
+                        'X-CSRFToken': this.getCsrfToken()
+                    },
+                    body: JSON.stringify({ nome })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    if (data.nome) {
+                        this.showError(data.nome[0]);
+                    } else {
+                        this.showError('Erro ao criar área de trabalho. Tente novamente.');
+                    }
+                    return;
+                }
+
+                const workspace = await response.json();
+                window.location.href = `/board/new/`;
+
+            } catch (error) {
+                console.error('Erro ao criar workspace:', error);
+                this.showError('Erro ao criar área de trabalho. Tente novamente.');
+            } finally {
+                this.setLoading(false);
+            }
+        }
+
+        getCsrfToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    }
+
+    // Inicializar o formulário quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => {
+        new NewWorkspaceForm();
+    });
+</script>
+{% endblock %}

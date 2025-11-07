@@ -19,6 +19,11 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
     permission_classes = [ IsAuthenticated, DjangoModelPermissions]
     rql_filter_class = WorkspaceFilterClass
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def perform_create(self, serializer):
         # Define o dono como o usuário autenticado ao criar
         serializer.save(dono=self.request.user)
@@ -73,3 +78,51 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
             {'detail': 'Membro adicionado com sucesso'},
             status=status.HTTP_201_CREATED
         )
+
+    @action(detail=True, methods=['post'], url_path='remove-member')
+    def remove_member(self, request, pk=None):
+        workspace = self.get_object()
+        
+        # Check if user is owner
+        if workspace.dono != request.user:
+            return Response(
+                {'detail': 'Apenas o dono pode remover membros'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response(
+                {'detail': 'user_id é obrigatório'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'Usuário não encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check if user is the owner
+        if workspace.dono == user:
+            return Response(
+                {'detail': 'Não é possível remover o proprietário'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if user is a member
+        try:
+            member = WorkspaceMember.objects.get(workspace=workspace, user=user)
+            member.delete()
+            return Response(
+                {'detail': 'Membro removido com sucesso'},
+                status=status.HTTP_200_OK
+            )
+        except WorkspaceMember.DoesNotExist:
+            return Response(
+                {'detail': 'Usuário não é membro deste workspace'},
+                status=status.HTTP_404_NOT_FOUND
+            )

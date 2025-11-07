@@ -70,24 +70,85 @@ def new_board(request):
     from workspaces.models import Workspace
 
     workspaces = Workspace.objects.all().order_by('nome')
-    return render(request, 'board/new_board.html', {'workspaces': workspaces})
+    workspace_id = request.GET.get('workspace')  # Get workspace from URL parameter
+    
+    return render(request, 'board/new_board.html', {
+        'workspaces': workspaces,
+        'selected_workspace_id': workspace_id
+    })
 
 
+@jwt_required
 def workspace_detail(request, workspace_id):
     """Renderiza a página de detalhe da área de trabalho (lista de boards desse workspace)."""
-    from workspaces.models import Workspace
+    from workspaces.models import Workspace, WorkspaceMember
 
-    workspace = Workspace.objects.filter(id=workspace_id).first()
+    workspace = Workspace.objects.filter(id=workspace_id).prefetch_related(
+        'boards', 
+        'workspace_members__user__profile',
+        'dono__profile'
+    ).first()
+    
     if not workspace:
-        # redireciona para a listagem de workspaces se não existir
         return render(request, 'workspace/workspace.html', {'error': 'Área de trabalho não encontrada.'})
+
+    # Verifica se o usuário tem acesso
+    is_owner = workspace.dono == request.user
+    is_member = WorkspaceMember.objects.filter(workspace=workspace, user=request.user).exists()
+    
+    if not is_owner and not is_member:
+        return render(request, 'workspace/workspace.html', {'error': 'Você não tem acesso a esta área de trabalho.'})
 
     # boards relacionados (related_name='boards' no modelo)
     boards = workspace.boards.all().order_by('nome')
 
+    # Prepara lista de membros para o template
+    members = []
+    if workspace.dono:
+        name = workspace.dono.get_full_name() or workspace.dono.username
+        name_parts = name.split()
+        initials = f"{name_parts[0][0]}{name_parts[-1][0]}".upper() if len(name_parts) >= 2 else name[0:2].upper()
+        
+        members.append({
+            'id': workspace.dono.id,
+            'name': name,
+            'email': workspace.dono.email,
+            'initials': initials,
+            'is_owner': True
+        })
+    
+    for wm in workspace.workspace_members.all():
+        name = wm.user.get_full_name() or wm.user.username
+        name_parts = name.split()
+        initials = f"{name_parts[0][0]}{name_parts[-1][0]}".upper() if len(name_parts) >= 2 else name[0:2].upper()
+        
+        members.append({
+            'id': wm.user.id,
+            'name': name,
+            'email': wm.user.email,
+            'initials': initials,
+            'is_owner': False
+        })
+
     return render(request, 'workspace/detail.html', {
         'workspace': workspace,
         'boards': boards,
+        'members': members,
+        'is_owner': is_owner,
+    })
+
+@jwt_required
+def board_detail(request, board_id):
+    """Renderiza a página de detalhe de uma pasta específica (planilha)."""
+    from boards.models import Board
+    
+    board = Board.objects.filter(id=board_id).select_related('workspace').first()
+    if not board:
+        return redirect('workspace')
+    
+    return render(request, 'board/detail.html', {
+        'board': board,
+        'workspace': board.workspace,
     })
 
 def logout_view(request):

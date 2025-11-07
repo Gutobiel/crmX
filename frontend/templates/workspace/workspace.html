@@ -248,9 +248,15 @@
         let data = [...allWorkspaces];
 
         if (activeFilter === 'my-folders') {
-            data = data.filter(ws => String(ws.dono) === String(currentUserId));
+            data = data.filter(ws => ws.is_owner === true);
         } else if (activeFilter === 'shared') {
-            data = data.filter(ws => String(ws.dono) !== String(currentUserId));
+            // Mostrar apenas workspaces que não são de propriedade do usuário
+            // e dos quais o usuário é membro
+            data = data.filter(ws => {
+                if (ws.is_owner === true) return false;
+                if (!Array.isArray(ws.members)) return false;
+                return ws.members.some(m => String(m.id) === String(currentUserId));
+            });
         }
 
         if (!data.length) {
@@ -265,26 +271,28 @@
     function buildCard(ws) {
         const card = document.createElement('div');
         card.className = 'workspace-card';
-        const isOwner = String(ws.dono) === String(currentUserId);
+        const isOwner = ws.is_owner || false;
         const badge = isOwner
             ? '<span class="badge" style="margin-left:8px; background:#e6f4ea; color:#1e7e34; padding:2px 8px; border-radius:12px; font-size:12px;">Proprietário</span>'
             : '<span class="badge" style="margin-left:8px; background:#e8f0fe; color:#1a73e8; padding:2px 8px; border-radius:12px; font-size:12px;">Compartilhado</span>';
 
-        const members = Array.isArray(ws.membros) ? ws.membros : [];
+        const members = Array.isArray(ws.members) ? ws.members : [];
         const memberAvatars = members.slice(0,3).map(avatarHtml).join('');
         const extra = members.length > 3 ? `<div class="member-avatar more-members" title="Mais membros">+${members.length - 3}</div>` : '';
+        const membersCount = ws.members_count || 0;
+        const foldersCount = ws.folders_count || 0;
 
         card.innerHTML = `
             <div class="workspace-header">
                 <h3 class="workspace-title">${escapeHtml(ws.nome || '')} ${badge}</h3>
                 <div class="workspace-header-actions">
-                    <a class="btn-primary" href="/workspace/${ws.id}/" title="Acessar"><i class="fas fa-arrow-right"></i> Acessar</a>
+                    <a class="btn-primary" href="/workspace/${ws.id}/boards/" title="Acessar"><i class="fas fa-arrow-right"></i> Acessar</a>
                     ${isOwner ? `<button class="btn-delete" data-id="${ws.id}" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
             </div>
             <div class="workspace-stats">
-                <div class="workspace-stat"><i class="fas fa-folder"></i><span>- pastas</span></div>
-                <div class="workspace-stat"><i class="fas fa-users"></i><span>${members.length} membros</span></div>
+                <div class="workspace-stat"><i class="fas fa-folder"></i><span>${foldersCount} pastas</span></div>
+                <div class="workspace-stat"><i class="fas fa-users"></i><span>${membersCount} membros</span></div>
             </div>
             <div class="workspace-members">${memberAvatars}${extra}</div>
         `;
@@ -292,10 +300,11 @@
         return card;
     }
 
-    function avatarHtml(memberId) {
-        // Sem lookup de usuário, usa marcador
-        const initial = typeof memberId === 'number' ? '#' : String(memberId).charAt(0).toUpperCase();
-        return `<div class="member-avatar" title="Membro">${initial}</div>`;
+    function avatarHtml(member) {
+        // Usa os dados do membro retornados pelo serializer
+        const initials = member.initials || '??';
+        const name = member.name || member.username || 'Membro';
+        return `<div class="member-avatar" title="${escapeHtml(name)}">${escapeHtml(initials)}</div>`;
     }
 
     function escapeHtml(str) {

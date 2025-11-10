@@ -151,6 +151,42 @@ def board_detail(request, board_id):
         'workspace': board.workspace,
     })
 
+@jwt_required
+def new_sheet(request):
+    """Renderiza a página de criação de nova planilha."""
+    from boards.models import Board
+    
+    board_id = request.GET.get('board')
+    if not board_id:
+        return redirect('workspace')
+    
+    board = Board.objects.filter(id=board_id).select_related('workspace').first()
+    if not board:
+        return redirect('workspace')
+    
+    return render(request, 'sheet/new.html', {
+        'board': board,
+        'workspace': board.workspace,
+    })
+
+@jwt_required
+def sheet_detail(request, sheet_id):
+    """Renderiza a página de detalhe/edição de uma planilha."""
+    from sheets.models import Sheet
+    
+    sheet = Sheet.objects.filter(id=sheet_id).select_related(
+        'board__workspace'
+    ).first()
+    
+    if not sheet:
+        return redirect('workspace')
+    
+    return render(request, 'sheet/detail.html', {
+        'sheet': sheet,
+        'board': sheet.board,
+        'workspace': sheet.board.workspace,
+    })
+
 def logout_view(request):
     # Para JWT, apenas limpar cookies no cliente já é suficiente.
     # Como boa prática, limpamos cookies também no servidor.

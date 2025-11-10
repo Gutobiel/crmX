@@ -55,6 +55,18 @@ export function isAuthenticated() {
     return !!getAccessToken();
 }
 
+// Retorna o objeto de headers padrão com Authorization se houver token
+export async function getAuthHeaders() {
+    const token = getAccessToken();
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
 // Exemplo opcional de helper: cria uma instância Axios autenticada
 export function createAuthenticatedAxios() {
     const instance = axios.create({
@@ -72,6 +84,7 @@ const auth = {
     getAccessToken,
     isAuthenticated,
     createAuthenticatedAxios,
+    getAuthHeaders,
 };
 
 // Setup axios interceptors for authentication

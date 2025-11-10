@@ -15,7 +15,9 @@ class Product(TimestampMixin, models.Model):
     valor_unitario = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        verbose_name='Valor Unitário'
+        verbose_name='Valor Unitário',
+        blank=True,
+        null=True,
     )
 
     class Meta:

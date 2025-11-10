@@ -17,6 +17,9 @@ urlpatterns = [
     path('board/new/', views.new_board, name='new_board'),
     path('board/<int:board_id>/', views.board_detail, name='board_detail'),
 
+    path('sheet/new/', views.new_sheet, name='new_sheet'),
+    path('sheet/<int:sheet_id>/', views.sheet_detail, name='sheet_detail'),
+
     path('logout/', views.logout_view, name='logout'),
 
     path("home2/", views.home2, name="home2"),

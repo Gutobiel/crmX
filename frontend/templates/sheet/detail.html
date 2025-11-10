@@ -1,0 +1,927 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ sheet.nome }} - Planilha{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        .sheet-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .sheet-breadcrumb a {
+            color: #333781;
+            text-decoration: none;
+        }
+
+        .sheet-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .sheet-header {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sheet-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sheet-title {
+            color: #302754;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sheet-type-badge {
+            padding: 6px 12px;
+            background: rgba(51, 55, 129, 0.1);
+            color: #333781;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .sheet-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            border: 1px solid #3a3f5c;
+        }
+
+        .sheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .sheet-table thead th {
+            background: #3a3f5c;
+            color: #a8a8b3;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-right: 1px solid #4a4f6c;
+            border-bottom: 1px solid #4a4f6c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sheet-table thead th:first-child,
+        .sheet-table thead th:nth-child(2) {
+            background: #32354a;
+        }
+
+        .sheet-table thead th:last-child {
+            border-right: none;
+            text-align: center;
+        }
+
+        .sheet-table thead th input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: #5a6ff6;
+        }
+
+        .sheet-table tbody td {
+            padding: 0;
+            border-right: 1px solid #3a3f5c;
+            border-bottom: 1px solid #3a3f5c;
+            color: #d4d4d8;
+            font-size: 13px;
+            background: #2a2d3e;
+            height: 40px;
+        }
+
+        .sheet-table tbody td:last-child {
+            border-right: none;
+        }
+
+        .sheet-table tbody tr:hover td {
+            background: #32354a;
+        }
+
+        .editable-wrapper {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 40px;
+            padding: 10px 12px;
+            cursor: text;
+            background: transparent;
+            color: #d4d4d8;
+            border: none;
+            box-sizing: border-box;
+            transition: background 0.2s ease;
+        }
+
+        .editable-wrapper[contenteditable="true"]:hover {
+            background: rgba(90, 111, 246, 0.1);
+        }
+
+        .editable-wrapper[contenteditable="true"]:focus {
+            outline: 2px solid #5a6ff6;
+            outline-offset: -2px;
+            background: #3a3f5c;
+        }
+
+        .editable-wrapper:empty:before {
+            content: '-';
+            color: #6b7280;
+        }
+
+        /* Scrollbar personalizada */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #2a2d3e;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #4a4f6c;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #5a6ff6;
+        }
+
+        .row-number {
+            background: #32354a;
+            color: #a8a8b3;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            width: 50px;
+            min-width: 50px;
+        }
+
+        .row-checkbox {
+            background: #32354a;
+            text-align: center;
+            width: 50px;
+            min-width: 50px;
+        }
+
+        .row-checkbox input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: #5a6ff6;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding: 0 8px;
+        }
+
+        .btn-icon {
+            padding: 6px 10px;
+            background: none;
+            border: 1px solid #4a4f6c;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #a8a8b3;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .btn-icon:hover {
+            background: #3a3f5c;
+            border-color: #5a6ff6;
+            color: #5a6ff6;
+        }
+
+        .btn-icon.delete:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .btn-icon.comment {
+            color: #fbbf24;
+        }
+
+        .btn-icon.comment:hover {
+            border-color: #fbbf24;
+        }
+
+        .btn-add-row {
+            width: calc(100% - 100px);
+            padding: 10px;
+            background: #2a2d3e;
+            border: 1px solid #4a4f6c;
+            border-radius: 0;
+            cursor: pointer;
+            color: #a8a8b3;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-left: 100px;
+            font-size: 12px;
+        }
+
+        .btn-add-row:hover {
+            background: #32354a;
+            border-color: #5a6ff6;
+            color: #5a6ff6;
+        }
+
+        .sheet-footer {
+            background: #32354a;
+            border-top: 2px solid #4a4f6c;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-stats {
+            display: flex;
+            gap: 30px;
+            color: #a8a8b3;
+            font-size: 13px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            color: #d4d4d8;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn-add-group {
+            padding: 8px 16px;
+            background: #2a2d3e;
+            border: 1px solid #4a4f6c;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #a8a8b3;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .btn-add-group:hover {
+            background: #3a3f5c;
+            border-color: #5a6ff6;
+            color: #5a6ff6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: #28a745;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .save-indicator.show {
+            display: flex;
+        }
+
+        .save-indicator.saving {
+            background: #ffc107;
+        }
+
+        .save-indicator.error {
+            background: #dc3545;
+        }
+    </style>
+{% endblock %}
+
+{% block page_title %}
+    {{ sheet.nome }}
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="sheet-breadcrumb">
+        <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'board_detail' board.id %}">{{ board.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{{ sheet.nome }}</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="sheet-header">
+        <div class="header-top">
+            <div class="sheet-title-wrapper">
+                <h1 class="sheet-title">{{ sheet.nome }}</h1>
+                <span class="sheet-type-badge">{{ sheet.get_tipo_display }}</span>
+            </div>
+            <div class="sheet-actions">
+                <button class="btn-action" onclick="editSheet()">
+                    <i class="fas fa-edit"></i>
+                    Editar Nome
+                </button>
+                <button class="btn-action" onclick="exportSheet()">
+                    <i class="fas fa-download"></i>
+                    Exportar
+                </button>
+                <button class="btn-action" style="color: #dc3545;" onclick="deleteSheet()">
+                    <i class="fas fa-trash"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="sheet-table" id="sheetTable">
+            <thead id="tableHead">
+                <!-- Colunas serão carregadas via JS -->
+            </thead>
+            <tbody id="tableBody">
+                <!-- Linhas serão carregadas via JS -->
+            </tbody>
+        </table>
+        
+        <button class="btn-add-row" onclick="addRow()">
+            <i class="fas fa-plus"></i> Adicionar elemento
+        </button>
+
+        <div class="sheet-footer">
+            <div class="footer-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Qtd.</span>
+                    <span class="stat-value" id="totalQtd">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">R$ Unitário</span>
+                    <span class="stat-value" id="totalUnit">R$ 0,00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">R$ Total</span>
+                    <span class="stat-value" id="totalValue">R$ 0,00</span>
+                </div>
+            </div>
+            <button class="btn-add-group" onclick="addGroup()">
+                <i class="fas fa-plus"></i> Adicionar novo grupo
+            </button>
+        </div>
+    </div>
+
+    <div class="save-indicator" id="saveIndicator">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span id="saveText">Salvando...</span>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
+
+    const sheetId = {{ sheet.id }};
+    const boardId = {{ board.id }};
+    const workspaceId = {{ workspace.id }};
+    const sheetTipo = '{{ sheet.tipo }}';
+    
+    let sheetData = null;
+        let elements = [];
+    let saveTimeout = null;
+
+    // Mapear tipos para endpoints e campos
+    const typeConfig = {
+        'generico': {
+            endpoint: 'elements/element',
+            fields: [] // Será definido dinamicamente
+        },
+        'contratos': {
+            endpoint: 'elements/contratos',
+            fields: [
+                { key: 'elemento', label: 'Elemento', editable: true },
+                { key: 'empresa', label: 'Empresa', editable: true },
+                { key: 'objeto', label: 'Objeto', editable: true },
+                { key: 'qtd_total_itens', label: 'Qtd Total Itens', editable: true },
+                { key: 'valor_total_anterior', label: 'Valor Total Anterior', editable: true },
+                { key: 'valor_total_reajustado', label: 'Valor Total Reajustado', editable: true }
+            ]
+        },
+        'colaboradores': {
+            endpoint: 'elements/collaborators',
+            fields: [
+                { key: 'element', label: 'Nome', editable: true },
+                { key: 'cargo', label: 'Cargo', editable: true },
+                { key: 'grossSalary', label: 'Salário Bruto', editable: true },
+                { key: 'benefit_food', label: 'Benefício Alimentação', editable: true },
+                { key: 'benefit_transport', label: 'Benefício Transporte', editable: true }
+            ]
+        },
+        'produtos': {
+            endpoint: 'elements/products',
+            fields: [
+                { key: 'codigo', label: 'Código', editable: true },
+                { key: 'nome', label: 'Nome', editable: true },
+                { key: 'categoria', label: 'Categoria', editable: true },
+                { key: 'preco', label: 'Preço', editable: true },
+                { key: 'estoque', label: 'Estoque', editable: true }
+            ]
+        }
+    };
+
+    // Carregar dados da planilha
+    async function loadSheet() {
+        try {
+            const headers = await getAuthHeaders();
+            
+            // Carregar sheet
+            const sheetResponse = await fetch(`/api/v1/sheets/sheet/${sheetId}/`, {
+                headers
+            });
+            if (!sheetResponse.ok) throw new Error('Failed to load sheet');
+            sheetData = await sheetResponse.json();
+
+            // Para genérico, usar colunas do JSON
+            if (sheetTipo === 'generico' && sheetData.colunas && sheetData.colunas.length > 0) {
+                typeConfig.generico.fields = sheetData.colunas.map(col => ({
+                    key: col.nome.toLowerCase().replace(/ /g, '_'),
+                    label: col.nome,
+                    editable: true
+                }));
+            }
+
+            // Carregar elementos
+            const config = typeConfig[sheetTipo];
+            const elementsResponse = await fetch(`/api/v1/${config.endpoint}/?sheet=${sheetId}`, {
+                headers
+            });
+            
+            if (!elementsResponse.ok) throw new Error('Failed to load elements');
+            const data = await elementsResponse.json();
+            elements = Array.isArray(data) ? data : (data.results || []);
+            
+            renderSheet();
+        } catch (error) {
+            console.error('Error loading sheet:', error);
+            alert('Erro ao carregar planilha');
+        }
+    }
+
+    // Renderizar planilha
+    function renderSheet() {
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const config = typeConfig[sheetTipo];
+
+        // Renderizar cabeçalho
+        const headerRow = document.createElement('tr');
+        
+        // Coluna de checkbox
+        const thCheckbox = document.createElement('th');
+        thCheckbox.innerHTML = '<input type="checkbox" onclick="toggleAllCheckboxes(this)">';
+        thCheckbox.style.width = '50px';
+        headerRow.appendChild(thCheckbox);
+
+        // Coluna de número
+        const thNumber = document.createElement('th');
+        thNumber.textContent = '';
+        thNumber.style.width = '50px';
+        headerRow.appendChild(thNumber);
+        
+        config.fields.forEach(field => {
+            const th = document.createElement('th');
+            
+            if (sheetTipo === 'generico') {
+                // No tipo genérico, as colunas são editáveis
+                th.innerHTML = `
+                    <span class="editable-wrapper" contenteditable="true" 
+                          onblur="updateColumnName(this, '${field.label}')">
+                        ${field.label}
+                    </span>
+                `;
+            } else {
+                th.textContent = field.label;
+            }
+            
+            headerRow.appendChild(th);
+        });
+
+        // Adicionar coluna de ações
+        const thActions = document.createElement('th');
+        thActions.innerHTML = '<i class="fas fa-cog"></i>';
+        thActions.style.width = '120px';
+        thActions.style.textAlign = 'center';
+        headerRow.appendChild(thActions);
+
+        tableHead.innerHTML = '';
+        tableHead.appendChild(headerRow);
+
+        // Renderizar linhas
+        tableBody.innerHTML = '';
+        
+        if (elements.length === 0) {
+            const emptyRow = document.createElement('tr');
+            const emptyCell = document.createElement('td');
+            emptyCell.colSpan = config.fields.length + 3;
+            emptyCell.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-table"></i>
+                    <p>Nenhuma linha adicionada ainda</p>
+                </div>
+            `;
+            emptyRow.appendChild(emptyCell);
+            tableBody.appendChild(emptyRow);
+            return;
+        }
+
+        elements.forEach((element, index) => {
+            const tr = document.createElement('tr');
+            
+            // Coluna de checkbox
+            const tdCheckbox = document.createElement('td');
+            tdCheckbox.className = 'row-checkbox';
+            tdCheckbox.innerHTML = `<input type="checkbox" data-element-id="${element.id}">`;
+            tr.appendChild(tdCheckbox);
+
+            // Coluna de número
+            const tdNumber = document.createElement('td');
+            tdNumber.className = 'row-number';
+            tdNumber.textContent = index + 1;
+            tr.appendChild(tdNumber);
+            
+            config.fields.forEach(field => {
+                const td = document.createElement('td');
+                const valor = sheetTipo === 'generico' ? 
+                    (element.colunas?.[field.label] || '') : 
+                    (element[field.key] || '');
+                
+                // Todas as células são editáveis (colunas fixas nos modelos, tudo editável no genérico)
+                // Para genérico, usar o label como field
+                const fieldAttr = sheetTipo === 'generico' ? field.label : field.key;
+                
+                td.innerHTML = `
+                    <span class="editable-wrapper" contenteditable="true" 
+                          data-element-id="${element.id}"
+                          data-field="${fieldAttr}"
+                          onblur="updateCell(this)">
+                        ${valor}
+                    </span>
+                `;
+                
+                tr.appendChild(td);
+            });
+
+            // Coluna de ações
+            const tdActions = document.createElement('td');
+            tdActions.innerHTML = `
+                <div class="row-actions">
+                    <button class="btn-icon comment" onclick="addComment(${element.id})" title="Comentário">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                    <button class="btn-icon delete" onclick="deleteRow(${element.id})" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            tr.appendChild(tdActions);
+
+            tableBody.appendChild(tr);
+        });
+
+        updateTotals();
+    }
+
+    // Toggle todos os checkboxes
+    window.toggleAllCheckboxes = function(checkbox) {
+        const checkboxes = document.querySelectorAll('.row-checkbox input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    };
+
+    // Adicionar comentário (placeholder)
+    window.addComment = function(elementId) {
+        alert('Funcionalidade de comentários será implementada');
+    };
+
+    // Atualizar totais
+    function updateTotals() {
+        const totalQtd = elements.reduce((sum, el) => {
+            const qtd = parseFloat(el.qtd_total_itens || el.quantity || 0);
+            return sum + qtd;
+        }, 0);
+
+        const totalValue = elements.reduce((sum, el) => {
+            const value = parseFloat(el.valor_total_reajustado || el.total_value || el.preco || 0);
+            return sum + value;
+        }, 0);
+
+        document.getElementById('totalQtd').textContent = totalQtd.toFixed(0);
+        document.getElementById('totalValue').textContent = `R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    // Atualizar nome da coluna (apenas para genérico)
+    window.updateColumnName = async function(element, oldName) {
+        if (sheetTipo !== 'generico') return;
+        
+        const newName = element.textContent.trim();
+        if (newName === oldName || !newName) {
+            element.textContent = oldName;
+            return;
+        }
+
+        // Atualizar estrutura de dados
+        const colunaIndex = sheetData.colunas.findIndex(c => c.nome === oldName);
+        if (colunaIndex !== -1) {
+            sheetData.colunas[colunaIndex].nome = newName;
+            
+            try {
+                const headers = await getAuthHeaders();
+                await fetch(`/api/v1/sheets/sheet/${sheetId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ colunas: sheetData.colunas })
+                });
+                
+                // Recarregar para atualizar estrutura
+                await loadSheet();
+                showSaveIndicator('Salvo!', 'success');
+            } catch (error) {
+                console.error('Error updating column:', error);
+                showSaveIndicator('Erro ao salvar', 'error');
+            }
+        }
+    };
+
+    // Atualizar célula
+    window.updateCell = async function(element) {
+        const elementId = element.dataset.elementId;
+        const fieldKey = element.dataset.field;
+        const newValue = element.textContent.trim();
+        const config = typeConfig[sheetTipo];
+        
+        const updateData = sheetTipo === 'generico' ? 
+            { colunas: { ...elements.find(e => e.id == elementId)?.colunas, [fieldKey]: newValue } } :
+            { [fieldKey]: newValue };
+
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`/api/v1/${config.endpoint}/${elementId}/`, {
+                method: 'PATCH',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            if (!response.ok) throw new Error('Failed to update cell');
+            
+            // Atualizar dados locais
+            const idx = elements.findIndex(e => e.id == elementId);
+            if (idx !== -1) {
+                if (sheetTipo === 'generico') {
+                    elements[idx].colunas = { ...elements[idx].colunas, [fieldKey]: newValue };
+                } else {
+                    elements[idx][fieldKey] = newValue;
+                }
+            }
+            
+            showSaveIndicator('Salvo!', 'success');
+        } catch (error) {
+            console.error('Error updating cell:', error);
+            showSaveIndicator('Erro ao salvar', 'error');
+        }
+    };
+
+    // Adicionar linha
+    window.addRow = async function() {
+        const config = typeConfig[sheetTipo];
+        const newElement = { sheet: sheetId };
+        
+        if (sheetTipo === 'generico') {
+            newElement.colunas = {};
+            config.fields.forEach(field => {
+                newElement.colunas[field.label] = '';
+            });
+        } else {
+            config.fields.forEach(field => {
+                newElement[field.key] = '';
+            });
+        }
+
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`/api/v1/${config.endpoint}/`, {
+                method: 'POST',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newElement)
+            });
+
+            if (!response.ok) throw new Error('Failed to add row');
+
+            const created = await response.json();
+            elements.push(created);
+            renderSheet();
+            showSaveIndicator('Linha adicionada!', 'success');
+        } catch (error) {
+            console.error('Error adding row:', error);
+            alert('Erro ao adicionar linha');
+        }
+    };
+
+    // Excluir linha
+    window.deleteRow = async function(elementId) {
+        if (!confirm('Tem certeza que deseja excluir esta linha?')) return;
+
+        const config = typeConfig[sheetTipo];
+
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`/api/v1/${config.endpoint}/${elementId}/`, {
+                method: 'DELETE',
+                headers
+            });
+
+            if (!response.ok) throw new Error('Failed to delete row');
+
+            elements = elements.filter(e => e.id !== elementId);
+            renderSheet();
+            showSaveIndicator('Linha excluída!', 'success');
+        } catch (error) {
+            console.error('Error deleting row:', error);
+            alert('Erro ao excluir linha');
+        }
+    };
+
+    // Mostrar indicador de salvamento
+    function showSaveIndicator(text, type = 'success') {
+        const indicator = document.getElementById('saveIndicator');
+        const saveText = document.getElementById('saveText');
+        
+        indicator.className = `save-indicator show ${type === 'error' ? 'error' : ''}`;
+        saveText.textContent = text;
+        
+        setTimeout(() => {
+            indicator.classList.remove('show');
+        }, 2000);
+    }
+
+    // Editar nome da planilha
+    window.editSheet = async function() {
+        const newName = prompt('Digite o novo nome da planilha:', sheetData.nome);
+        if (!newName || newName === sheetData.nome) return;
+
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`/api/v1/sheets/sheet/${sheetId}/`, {
+                method: 'PATCH',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome: newName })
+            });
+
+            if (!response.ok) throw new Error('Failed to update sheet name');
+
+            sheetData.nome = newName;
+            document.querySelector('.sheet-title').textContent = newName;
+            alert('Nome atualizado com sucesso!');
+        } catch (error) {
+            console.error('Error updating sheet name:', error);
+            alert('Erro ao atualizar nome');
+        }
+    };
+
+    // Exportar planilha
+    window.exportSheet = function() {
+        const config = typeConfig[sheetTipo];
+        let csv = '';
+        
+        // Cabeçalho
+        csv += config.fields.map(f => f.label).join(',') + '\n';
+        
+        // Linhas
+        elements.forEach(element => {
+            csv += config.fields.map(f => {
+                const value = sheetTipo === 'generico' ? 
+                    (element.colunas?.[f.label] || '') : 
+                    (element[f.key] || '');
+                return `"${value}"`;
+            }).join(',') + '\n';
+        });
+
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${sheetData.nome}.csv`;
+        link.click();
+    };
+
+    // Adicionar grupo (placeholder)
+    window.addGroup = function() {
+        alert('Funcionalidade de grupos será implementada em breve');
+    };
+
+    // Excluir planilha
+    window.deleteSheet = async function() {
+        if (!confirm('Tem certeza que deseja excluir esta planilha? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`/api/v1/sheets/sheet/${sheetId}/`, {
+                method: 'DELETE',
+                headers
+            });
+
+            if (!response.ok) throw new Error('Failed to delete sheet');
+
+            alert('Planilha excluída com sucesso!');
+            window.location.href = `/board/${boardId}/`;
+        } catch (error) {
+            console.error('Error deleting sheet:', error);
+            alert('Erro ao excluir planilha');
+        }
+    };
+
+    // Carregar planilha ao carregar a página
+    document.addEventListener('DOMContentLoaded', loadSheet);
+</script>
+{% endblock %}

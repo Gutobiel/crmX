@@ -1,0 +1,455 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nova Planilha{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        .sheet-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .sheet-breadcrumb a {
+            color: #333781;
+            text-decoration: none;
+        }
+
+        .sheet-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-title {
+            color: #302754;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            color: #302754;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #333781;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .template-card {
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+            position: relative;
+        }
+
+        .template-card:hover {
+            border-color: #333781;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .template-card.selected {
+            border-color: #333781;
+            border-width: 3px;
+            background: rgba(51, 55, 129, 0.1);
+            box-shadow: 0 0 0 3px rgba(51, 55, 129, 0.2);
+        }
+
+        .template-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #333781;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 24px;
+            text-align: center;
+        }
+
+        .template-icon {
+            font-size: 32px;
+            color: #333781;
+            margin-bottom: 10px;
+        }
+
+        .template-name {
+            color: #302754;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .template-desc {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .btn-cancel {
+            padding: 12px 30px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            padding: 12px 30px;
+            background: #333781;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-submit:hover {
+            background: #272f5f;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+    </style>
+{% endblock %}
+
+{% block page_title %}
+    Nova Planilha
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="sheet-breadcrumb">
+        <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'board_detail' board.id %}">{{ board.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Nova Planilha</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <h1 class="form-title">Criar Nova Planilha</h1>
+        
+        <form id="sheetForm">
+            <div class="form-group">
+                <label class="form-label" for="sheetName">Nome da Planilha *</label>
+                <input 
+                    type="text" 
+                    id="sheetName" 
+                    class="form-input" 
+                    placeholder="Digite o nome da planilha"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Escolha um Modelo *</label>
+                <div class="template-grid">
+                    <div class="template-card" data-tipo="generico">
+                        <div class="template-icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <div class="template-name">Genérico</div>
+                        <div class="template-desc">Planilha totalmente personalizável</div>
+                    </div>
+                    
+                    <div class="template-card" data-tipo="contratos">
+                        <div class="template-icon">
+                            <i class="fas fa-file-contract"></i>
+                        </div>
+                        <div class="template-name">Contratos</div>
+                        <div class="template-desc">Modelo para gestão de contratos</div>
+                    </div>
+                    
+                    <div class="template-card" data-tipo="colaboradores">
+                        <div class="template-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="template-name">Colaboradores</div>
+                        <div class="template-desc">Modelo para gestão de pessoas</div>
+                    </div>
+                    
+                    <div class="template-card" data-tipo="produtos">
+                        <div class="template-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="template-name">Produtos</div>
+                        <div class="template-desc">Modelo para catálogo de produtos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="cancelSheet()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Criar Planilha
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    console.log('=== Script module iniciado ===');
+    
+    import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
+    console.log('✓ Import realizado com sucesso');
+    
+    const boardId = {{ board.id }};
+    let selectedTipo = null;
+    
+    console.log('✓ Board ID:', boardId);
+
+    // Modelos predefinidos
+    const templates = {
+        generico: {
+            colunas: [
+                { nome: 'Coluna 1', editavel: true },
+                { nome: 'Coluna 2', editavel: true },
+                { nome: 'Coluna 3', editavel: true },
+                { nome: 'Coluna 4', editavel: true },
+                { nome: 'Coluna 5', editavel: true }
+            ]
+        },
+        contratos: {
+            colunas: [
+                { nome: 'Elemento', editavel: false },
+                { nome: 'Empresa', editavel: false },
+                { nome: 'Objeto', editavel: false },
+                { nome: 'Qtd Total Itens', editavel: false },
+                { nome: 'Valor Total Anterior', editavel: false },
+                { nome: 'Valor Total Reajustado', editavel: false }
+            ]
+        },
+        colaboradores: {
+            colunas: [
+                { nome: 'Nome', editavel: false },
+                { nome: 'Cargo', editavel: false },
+                { nome: 'Salário Bruto', editavel: false },
+                { nome: 'Benefício Alimentação', editavel: false },
+                { nome: 'Benefício Transporte', editavel: false }
+            ]
+        },
+        produtos: {
+            colunas: [
+                { nome: 'Código', editavel: false },
+                { nome: 'Nome', editavel: false },
+                { nome: 'Categoria', editavel: false },
+                { nome: 'Preço', editavel: false },
+                { nome: 'Estoque', editavel: false }
+            ]
+        }
+    };
+
+    // Selecionar modelo - aguardar DOM estar pronto
+    function initTemplateSelection() {
+        console.log('Iniciando initTemplateSelection...');
+        const cards = document.querySelectorAll('.template-card');
+        console.log('Template cards encontrados:', cards.length);
+        console.log('Cards:', cards);
+        
+        if (cards.length === 0) {
+            console.error('Nenhum card encontrado! Tentando novamente em 100ms...');
+            setTimeout(initTemplateSelection, 100);
+            return;
+        }
+        
+        cards.forEach((card, index) => {
+            console.log(`Adicionando listener ao card ${index}:`, card.dataset.tipo);
+            card.addEventListener('click', function(e) {
+                console.log('=== CLICK DETECTADO ===');
+                console.log('Card clicado:', this.dataset.tipo);
+                console.log('Elemento:', this);
+                
+                // Remove seleção de todos os cards
+                const allCards = document.querySelectorAll('.template-card');
+                allCards.forEach(c => {
+                    c.classList.remove('selected');
+                    console.log('Removida classe selected de:', c.dataset.tipo);
+                });
+                
+                // Adiciona seleção ao card clicado
+                this.classList.add('selected');
+                selectedTipo = this.dataset.tipo;
+                
+                console.log('Classe selected adicionada!');
+                console.log('Tipo selecionado:', selectedTipo);
+                console.log('Classes do elemento:', this.classList);
+            });
+        });
+        
+        console.log('Todos os listeners adicionados!');
+    }
+
+    // Inicializar sempre no DOMContentLoaded para garantir
+    console.log('Registrando listener DOMContentLoaded...');
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded disparado!');
+        initTemplateSelection();
+    });
+    
+    // Também tentar inicializar imediatamente se DOM já estiver pronto
+    if (document.readyState !== 'loading') {
+        console.log('DOM já está pronto, inicializando imediatamente...');
+        initTemplateSelection();
+    }
+
+    // Cancelar
+    window.cancelSheet = function() {
+        if (confirm('Tem certeza que deseja cancelar? As alterações não serão salvas.')) {
+            window.location.href = `/board/${boardId}/`;
+        }
+    };
+
+    // Submit do formulário
+    function initFormSubmit() {
+        console.log('Iniciando initFormSubmit...');
+        const form = document.getElementById('sheetForm');
+        if (!form) {
+            console.error('Formulário não encontrado!');
+            return;
+        }
+        
+        console.log('Formulário encontrado, adicionando listener submit...');
+        
+        form.addEventListener('submit', async function(e) {
+            console.log('=== SUBMIT DETECTADO ===');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('selectedTipo atual:', selectedTipo);
+
+            if (!selectedTipo) {
+                alert('Por favor, selecione um modelo');
+                return;
+            }
+
+            const nome = document.getElementById('sheetName').value;
+            console.log('Nome da planilha:', nome);
+            
+            // Usar colunas do template selecionado
+            const colunas = templates[selectedTipo].colunas;
+            console.log('Colunas:', colunas);
+
+            try {
+                console.log('Obtendo headers de autenticação...');
+                const headers = await getAuthHeaders();
+                console.log('Headers obtidos:', headers);
+                
+                const payload = {
+                    board: boardId,
+                    nome: nome,
+                    tipo: selectedTipo,
+                    colunas: colunas
+                };
+                console.log('Payload a ser enviado:', payload);
+                
+                const response = await fetch('/api/v1/sheet/', {
+                    method: 'POST',
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Erro da API:', error);
+                    throw new Error(error.detail || 'Erro ao criar planilha');
+                }
+
+                const sheet = await response.json();
+                console.log('Planilha criada com sucesso:', sheet);
+                console.log('Redirecionando para /board/' + boardId + '/');
+                
+                // Redirecionar para a página do board mostrando a planilha criada
+                window.location.href = `/board/${boardId}/`;
+            } catch (error) {
+                console.error('Error creating sheet:', error);
+                alert('Erro ao criar planilha: ' + error.message);
+            }
+        });
+        
+        console.log('Listener submit adicionado com sucesso!');
+    }
+
+    // Inicializar formulário no DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded - inicializando formulário...');
+        initFormSubmit();
+    });
+    
+    // Também tentar inicializar imediatamente se DOM já estiver pronto
+    if (document.readyState !== 'loading') {
+        console.log('DOM já está pronto, inicializando formulário imediatamente...');
+        initFormSubmit();
+    }
+    
+    console.log('=== Script module finalizado ===');
+</script>
+{% endblock %}

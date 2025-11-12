@@ -179,7 +179,7 @@
     <div class="sheet-breadcrumb">
         <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
         <i class="fas fa-chevron-right"></i>
-        <a href="{% url 'board_detail' board.id %}">{{ board.nome }}</a>
+    <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
         <i class="fas fa-chevron-right"></i>
         <span>Nova Planilha</span>
     </div>
@@ -252,108 +252,21 @@
 
 {% block extra_js %}
 <script type="module">
-    console.log('=== Script module iniciado ===');
-    
     import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
-    console.log('✓ Import realizado com sucesso');
     
-    const boardId = {{ board.id }};
+    const boardId = "{{ board.id }}";
     let selectedTipo = null;
-    
-    console.log('✓ Board ID:', boardId);
 
-    // Modelos predefinidos
-    const templates = {
-        generico: {
-            colunas: [
-                { nome: 'Coluna 1', editavel: true },
-                { nome: 'Coluna 2', editavel: true },
-                { nome: 'Coluna 3', editavel: true },
-                { nome: 'Coluna 4', editavel: true },
-                { nome: 'Coluna 5', editavel: true }
-            ]
-        },
-        contratos: {
-            colunas: [
-                { nome: 'Elemento', editavel: false },
-                { nome: 'Empresa', editavel: false },
-                { nome: 'Objeto', editavel: false },
-                { nome: 'Qtd Total Itens', editavel: false },
-                { nome: 'Valor Total Anterior', editavel: false },
-                { nome: 'Valor Total Reajustado', editavel: false }
-            ]
-        },
-        colaboradores: {
-            colunas: [
-                { nome: 'Nome', editavel: false },
-                { nome: 'Cargo', editavel: false },
-                { nome: 'Salário Bruto', editavel: false },
-                { nome: 'Benefício Alimentação', editavel: false },
-                { nome: 'Benefício Transporte', editavel: false }
-            ]
-        },
-        produtos: {
-            colunas: [
-                { nome: 'Código', editavel: false },
-                { nome: 'Nome', editavel: false },
-                { nome: 'Categoria', editavel: false },
-                { nome: 'Preço', editavel: false },
-                { nome: 'Estoque', editavel: false }
-            ]
-        }
-    };
-
-    // Selecionar modelo - aguardar DOM estar pronto
+    // Seleção de template
     function initTemplateSelection() {
-        console.log('Iniciando initTemplateSelection...');
         const cards = document.querySelectorAll('.template-card');
-        console.log('Template cards encontrados:', cards.length);
-        console.log('Cards:', cards);
-        
-        if (cards.length === 0) {
-            console.error('Nenhum card encontrado! Tentando novamente em 100ms...');
-            setTimeout(initTemplateSelection, 100);
-            return;
-        }
-        
-        cards.forEach((card, index) => {
-            console.log(`Adicionando listener ao card ${index}:`, card.dataset.tipo);
-            card.addEventListener('click', function(e) {
-                console.log('=== CLICK DETECTADO ===');
-                console.log('Card clicado:', this.dataset.tipo);
-                console.log('Elemento:', this);
-                
-                // Remove seleção de todos os cards
-                const allCards = document.querySelectorAll('.template-card');
-                allCards.forEach(c => {
-                    c.classList.remove('selected');
-                    console.log('Removida classe selected de:', c.dataset.tipo);
-                });
-                
-                // Adiciona seleção ao card clicado
+        cards.forEach(card => {
+            card.addEventListener('click', function() {
+                cards.forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
                 selectedTipo = this.dataset.tipo;
-                
-                console.log('Classe selected adicionada!');
-                console.log('Tipo selecionado:', selectedTipo);
-                console.log('Classes do elemento:', this.classList);
             });
         });
-        
-        console.log('Todos os listeners adicionados!');
-    }
-
-    // Inicializar sempre no DOMContentLoaded para garantir
-    console.log('Registrando listener DOMContentLoaded...');
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOMContentLoaded disparado!');
-        initTemplateSelection();
-    });
-    
-    // Também tentar inicializar imediatamente se DOM já estiver pronto
-    if (document.readyState !== 'loading') {
-        console.log('DOM já está pronto, inicializando imediatamente...');
-        initTemplateSelection();
     }
 
     // Cancelar
@@ -365,21 +278,11 @@
 
     // Submit do formulário
     function initFormSubmit() {
-        console.log('Iniciando initFormSubmit...');
         const form = document.getElementById('sheetForm');
-        if (!form) {
-            console.error('Formulário não encontrado!');
-            return;
-        }
-        
-        console.log('Formulário encontrado, adicionando listener submit...');
+        if (!form) return;
         
         form.addEventListener('submit', async function(e) {
-            console.log('=== SUBMIT DETECTADO ===');
             e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('selectedTipo atual:', selectedTipo);
 
             if (!selectedTipo) {
                 alert('Por favor, selecione um modelo');
@@ -387,24 +290,19 @@
             }
 
             const nome = document.getElementById('sheetName').value;
-            console.log('Nome da planilha:', nome);
             
-            // Usar colunas do template selecionado
-            const colunas = templates[selectedTipo].colunas;
-            console.log('Colunas:', colunas);
-
+            if (!nome.trim()) {
+                alert('Por favor, insira um nome para a planilha');
+                return;
+            }
+            
             try {
-                console.log('Obtendo headers de autenticação...');
                 const headers = await getAuthHeaders();
-                console.log('Headers obtidos:', headers);
-                
                 const payload = {
-                    board: boardId,
+                    board: parseInt(boardId),
                     nome: nome,
-                    tipo: selectedTipo,
-                    colunas: colunas
+                    tipo: selectedTipo
                 };
-                console.log('Payload a ser enviado:', payload);
                 
                 const response = await fetch('/api/v1/sheet/', {
                     method: 'POST',
@@ -414,42 +312,26 @@
                     },
                     body: JSON.stringify(payload)
                 });
-
-                console.log('Response status:', response.status);
-
+                
                 if (!response.ok) {
                     const error = await response.json();
-                    console.error('Erro da API:', error);
                     throw new Error(error.detail || 'Erro ao criar planilha');
                 }
-
-                const sheet = await response.json();
-                console.log('Planilha criada com sucesso:', sheet);
-                console.log('Redirecionando para /board/' + boardId + '/');
                 
-                // Redirecionar para a página do board mostrando a planilha criada
+                const sheet = await response.json();
+                alert('Planilha criada com sucesso!');
                 window.location.href = `/board/${boardId}/`;
             } catch (error) {
-                console.error('Error creating sheet:', error);
+                console.error('Erro:', error);
                 alert('Erro ao criar planilha: ' + error.message);
             }
         });
-        
-        console.log('Listener submit adicionado com sucesso!');
     }
 
-    // Inicializar formulário no DOMContentLoaded
+    // Inicializar
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOMContentLoaded - inicializando formulário...');
+        initTemplateSelection();
         initFormSubmit();
     });
-    
-    // Também tentar inicializar imediatamente se DOM já estiver pronto
-    if (document.readyState !== 'loading') {
-        console.log('DOM já está pronto, inicializando formulário imediatamente...');
-        initFormSubmit();
-    }
-    
-    console.log('=== Script module finalizado ===');
 </script>
 {% endblock %}

@@ -15,10 +15,11 @@ urlpatterns = [
 
     path('board/', views.new_board, name='board'),
     path('board/new/', views.new_board, name='new_board'),
-    path('board/<int:board_id>/', views.board_detail, name='board_detail'),
+    path('workspace/<int:workspace_id>/board/<int:board_id>/', views.board_detail, name='board_detail'),
 
     path('sheet/new/', views.new_sheet, name='new_sheet'),
     path('sheet/<int:sheet_id>/', views.sheet_detail, name='sheet_detail'),
+    path('sheet/detail/', views.sheet_detail2, name='sheet_detail2'),
 
     path('logout/', views.logout_view, name='logout'),
 

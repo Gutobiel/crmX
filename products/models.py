@@ -4,7 +4,6 @@ from mixins.models import TimestampMixin
 class Product(TimestampMixin, models.Model):
     nome = models.CharField(
         max_length=100,
-        unique=True,
         verbose_name='Nome'
     )
     descricao = models.TextField(

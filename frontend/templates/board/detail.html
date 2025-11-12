@@ -283,6 +283,127 @@
             gap: 10px;
         }
 
+        /* Inline editable styles (padrão claro) */
+        .table-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-sheet-secondary {
+            padding: 8px 12px;
+            background: white;
+            color: #333781;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-sheet-secondary:hover {
+            background: #f8f9fa;
+            border-color: #333781;
+            color: #333781;
+        }
+
+        .editable-wrapper {
+            display: inline-block;
+            width: 100%;
+            min-height: 20px;
+            padding: 4px 6px;
+            cursor: text;
+            background: transparent;
+            color: #302754;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        .editable-wrapper:focus {
+            outline: none;
+            border-color: #333781;
+            background: #fff;
+        }
+
+        /* Estilos para sub-linhas */
+        .sub-row {
+            background-color: #fafafa;
+        }
+
+        .sub-row td {
+            padding-left: 40px;
+            font-size: 0.95em;
+            border-left: 3px solid #333781;
+        }
+
+        .main-row {
+            background-color: white;
+        }
+
+        .add-sub-btn {
+            padding: 6px 12px;
+            background-color: #28a745;
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .add-sub-btn:hover {
+            background-color: #1e7e34;
+        }
+
+        .remove-btn {
+            padding: 6px 12px;
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-btn:hover {
+            background-color: #b02a37;
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .editable-table td[contenteditable="true"],
+        .editable-table th[contenteditable="true"] {
+            background-color: #fffdf2;
+            transition: background-color 0.3s;
+        }
+
+        .editable-table td[contenteditable="true"]:focus,
+        .editable-table th[contenteditable="true"]:focus {
+            background-color: #ffffcc;
+            outline: 2px solid #333781;
+            outline-offset: -2px;
+        }
+
     </style>
 {% endblock %}
 
@@ -352,12 +473,7 @@
      - Nome da planilha e planilha
       -->
 
-        <div id="sheetsContainer">
-            <div class="empty-state">
-                <i class="fas fa-table"></i>
-                <p>Nenhuma planilha criada ainda</p>
-            </div>
-        </div>
+        <div id="sheetsContainer" class="space-y-8"></div>
     </div>
 {% endblock %}
 
@@ -373,194 +489,6 @@
         const boardId = {{ board.id }};
         window.location.assign(`/sheet/new/?board=${boardId}`);
     };
-</script>
-
-<script type="module">
-    import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
-
-    const boardId = {{ board.id }};
-    const workspaceId = {{ workspace.id }};
-
-    // Load sheets for this board
-    async function loadSheets() {
-        try {
-            const headers = await getAuthHeaders();
-            // Corrigido: endpoint é /api/v1/sheet/ (router.register('sheet', ...))
-            const response = await fetch(`/api/v1/sheet/?board=${boardId}`, {
-                headers
-            });
-
-            if (!response.ok) throw new Error('Failed to load sheets');
-
-            const sheets = await response.json();
-            displaySheets(sheets);
-        } catch (error) {
-            console.error('Error loading sheets:', error);
-        }
-    }
-
-    async function displaySheets(sheets) {
-        const container = document.getElementById('sheetsContainer');
-        if (sheets.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-table"></i>
-                    <p>Nenhuma planilha criada ainda</p>
-                    <a class="btn-primary" href="/sheet/new/?board=${boardId}" id="btnFirstSheet">
-                        <i class="fas fa-plus"></i>
-                        Criar primeira planilha
-                    </a>
-                </div>`;
-            return;
-        }
-
-        // Carregar dados de cada planilha
-        for (const sheet of sheets) {
-            await loadSheetData(sheet);
-        }
-
-        container.innerHTML = sheets.map(sheet => {
-            const previewTable = renderSheetPreview(sheet);
-            return `
-            <div class="sheet-wrapper" data-sheet-id="${sheet.id}">
-                <div class="sheet-header">
-                    <h3>
-                        <i class="fas fa-table"></i>
-                        ${sheet.nome || "Planilha Sem Nome"}
-                        <span style="font-size: 12px; font-weight: normal; color: #666; margin-left: 10px;">
-                            ${sheet.tipo_display || sheet.tipo || 'Genérico'}
-                        </span>
-                    </h3>
-                    <div class="sheet-actions">
-                        <button class="btn-sheet-action" onclick="openSheet(${sheet.id})">
-                            <i class="fas fa-edit"></i>
-                            Editar
-                        </button>
-                    </div>
-                </div>
-                <div class="table-container-preview">
-                    ${previewTable}
-                </div>
-            </div>
-        `}).join('');
-    }
-
-    async function loadSheetData(sheet) {
-        try {
-            const headers = await getAuthHeaders();
-            
-            // Determinar endpoint baseado no tipo de planilha
-            const typeConfig = {
-                'generico': 'elements/generic',
-                'contratos': 'elements/contratos',
-                'colaboradores': 'elements/collaborators',
-                'produtos': 'elements/products'
-            };
-
-            const endpoint = typeConfig[sheet.tipo] || 'elements/generic';
-            const response = await fetch(`/api/v1/${endpoint}/?sheet=${sheet.id}`, {
-                headers
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                sheet.elements = Array.isArray(data) ? data : (data.results || []);
-            } else {
-                sheet.elements = [];
-            }
-        } catch (error) {
-            console.error('Error loading sheet data:', error);
-            sheet.elements = [];
-        }
-    }
-
-    function renderSheetPreview(sheet) {
-        if (!sheet.elements || sheet.elements.length === 0) {
-            return `
-                <div style="padding: 20px; text-align: center; color: #999;">
-                    <i class="fas fa-inbox"></i>
-                    <p>Nenhum dado ainda. Clique em "Editar" para adicionar.</p>
-                </div>
-            `;
-        }
-
-        // Definir campos baseado no tipo
-        const fieldConfig = {
-            'generico': sheet.colunas || [],
-            'contratos': ['Elemento', 'Empresa', 'Objeto', 'Qtd Total Itens', 'Valor Total'],
-            'colaboradores': ['Nome', 'Cargo', 'Salário Bruto'],
-            'produtos': ['Código', 'Nome', 'Categoria', 'Preço', 'Estoque']
-        };
-
-        const fields = fieldConfig[sheet.tipo] || ['Dados'];
-        const maxRows = 5; // Mostrar no máximo 5 linhas
-        const displayElements = sheet.elements.slice(0, maxRows);
-
-        let tableHTML = `
-            <table class="editable-table">
-                <thead>
-                    <tr>
-                        ${fields.map(field => `<th>${typeof field === 'object' ? field.nome : field}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        displayElements.forEach(element => {
-            tableHTML += '<tr>';
-            
-            if (sheet.tipo === 'generico') {
-                fields.forEach(field => {
-                    const fieldName = typeof field === 'object' ? field.nome : field;
-                    const value = element.colunas?.[fieldName] || '-';
-                    tableHTML += `<td>${value}</td>`;
-                });
-            } else {
-                // Para tipos específicos
-                const fieldKeys = {
-                    'contratos': ['elemento', 'empresa', 'objeto', 'qtd_total_itens', 'valor_total_reajustado'],
-                    'colaboradores': ['element', 'cargo', 'grossSalary'],
-                    'produtos': ['codigo', 'nome', 'categoria', 'preco', 'estoque']
-                };
-                
-                const keys = fieldKeys[sheet.tipo] || [];
-                keys.forEach(key => {
-                    const value = element[key] || '-';
-                    tableHTML += `<td>${value}</td>`;
-                });
-            }
-            
-            tableHTML += '</tr>';
-        });
-
-        tableHTML += '</tbody></table>';
-
-        if (sheet.elements.length > maxRows) {
-            tableHTML += `
-                <div style="padding: 10px; text-align: center; color: #666; font-size: 13px;">
-                    <i class="fas fa-ellipsis-h"></i>
-                    Mostrando ${maxRows} de ${sheet.elements.length} linhas. Clique em "Editar" para ver todas.
-                </div>
-            `;
-        }
-
-        return tableHTML;
-    }
-
-
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    // Garantir href correto se houver qualquer interferência de template
-    document.addEventListener('DOMContentLoaded', () => {
-        const newBtn = document.getElementById('btnNewSheet');
-        const firstBtn = document.getElementById('btnFirstSheet');
-        const target = `/sheet/new/?board=${boardId}`;
-        if (newBtn && newBtn.getAttribute('href') !== target) newBtn.setAttribute('href', target);
-        if (firstBtn && firstBtn.getAttribute('href') !== target) firstBtn.setAttribute('href', target);
-    });
 
     window.editBoard = function() {
         alert('Funcionalidade de edição será implementada');
@@ -571,11 +499,15 @@
     };
 
     window.deleteBoard = async function() {
+        const workspaceId = {{ workspace.id }};
+        const boardId = {{ board.id }};
+        
         if (!confirm('Tem certeza que deseja excluir esta pasta? Esta ação não pode ser desfeita.')) {
             return;
         }
 
         try {
+            const { getAuthHeaders } = await import('{% static "js/api/auth.js" %}');
             const headers = await getAuthHeaders();
             const response = await fetch(`/api/v1/board/${boardId}/`, {
                 method: 'DELETE',
@@ -591,9 +523,199 @@
             alert('Erro ao excluir pasta');
         }
     };
+</script>
 
-    // Load sheets on page load
-    document.addEventListener('DOMContentLoaded', loadSheets);
+<script type="module">
+import axios from "https://cdn.jsdelivr.net/npm/axios@1.6.2/+esm";
+import { getAuthHeaders } from "{% static 'js/api/auth.js' %}";
 
+const boardId = {{ board.id }};
+const headers = await getAuthHeaders();
+const api = axios.create({ headers });
+
+// ============================================================
+//  🔹 Funções de comunicação com o backend (Django REST)
+// ============================================================
+
+async function getSheets() {
+  const { data } = await api.get(`/api/v1/sheet/?board=${boardId}`);
+  return Promise.all(data.map(async sheet => {
+    const detail = await api.get(`/api/v1/sheet/${sheet.id}/`);
+    return detail.data;
+  }));
+}
+
+async function updateCell(cellId, newValue) {
+  try {
+    await api.patch(`/api/v1/cell/${cellId}/`, { value: newValue });
+  } catch (err) {
+    console.error(`Erro ao atualizar célula ${cellId}:`, err);
+  }
+}
+
+async function updateColumn(colId, newName) {
+  try {
+    await api.patch(`/api/v1/column/${colId}/`, { nome: newName });
+  } catch (err) {
+    console.error(`Erro ao atualizar coluna ${colId}:`, err);
+  }
+}
+
+async function addRow(sheetId, parentId = null, isSubrow = false) {
+  const { data } = await api.post(`/api/v1/row/`, {
+    sheet: sheetId,
+    parent: parentId,
+    is_subrow: isSubrow,
+  });
+  return data;
+}
+
+async function deleteRow(rowId) {
+  await api.delete(`/api/v1/row/${rowId}/`);
+}
+
+// ============================================================
+//  🔹 Renderização de tabela
+// ============================================================
+
+function renderSheetCard(sheet) {
+  const columns = sheet.columns || [];
+  const rows = sheet.rows || [];
+
+  const table = document.createElement("table");
+  table.className = "dynamic-table w-full border border-gray-300 rounded-lg shadow-sm";
+
+  // Cabeçalho
+  const thead = document.createElement("thead");
+  thead.innerHTML = `
+    <tr class="bg-gray-100">
+      ${columns.map(c => `<th data-col-id="${c.id}" class="p-2 border">${c.nome}</th>`).join("")}
+      <th class="p-2 border">Ações</th>
+    </tr>`;
+  table.appendChild(thead);
+
+  // Corpo
+  const tbody = document.createElement("tbody");
+
+  rows.filter(r => !r.is_subrow).forEach(row => {
+    tbody.appendChild(renderRow(row, columns, sheet.id, rows));
+  });
+
+  table.appendChild(tbody);
+
+  // Botão adicionar linha
+  const addLineBtn = document.createElement("button");
+  addLineBtn.className = "mt-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700";
+  addLineBtn.textContent = "Adicionar linha";
+  addLineBtn.onclick = async () => {
+    const newRow = await addRow(sheet.id);
+    const rowEl = renderRow(newRow, columns, sheet.id, rows);
+    tbody.appendChild(rowEl);
+    enableLiveEditing(rowEl.closest("table"));
+  };
+
+  const container = document.createElement("div");
+  container.innerHTML = `<h3 class="text-lg font-semibold mb-2">${sheet.nome}</h3>`;
+  container.appendChild(table);
+  container.appendChild(addLineBtn);
+
+  return container.outerHTML;
+}
+
+function renderRow(row, columns, sheetId, allRows) {
+  const tr = document.createElement("tr");
+  tr.dataset.rowId = row.id;
+
+  const cells = row.cells || [];
+
+  // Células principais
+  columns.forEach(col => {
+    const cell = cells.find(c => c.column === col.id);
+    const td = document.createElement("td");
+    td.className = "p-2 border";
+    td.dataset.cellId = cell?.id;
+    td.contentEditable = true;
+    td.textContent = cell?.value || "";
+    td.addEventListener("blur", async e => {
+      const newValue = e.target.innerText.trim();
+      if (cell) await updateCell(cell.id, newValue);
+    });
+    tr.appendChild(td);
+  });
+
+  // Coluna de ações
+  const tdActions = document.createElement("td");
+  tdActions.className = "p-2 border text-center";
+
+  const addSubBtn = document.createElement("button");
+  addSubBtn.textContent = "➕ Sublinha";
+  addSubBtn.className = "text-blue-600 mr-2";
+  addSubBtn.onclick = async () => {
+    const newSub = await addRow(sheetId, row.id, true);
+    const subEl = renderRow(newSub, columns, sheetId, allRows);
+    subEl.classList.add("bg-gray-50");
+    tr.insertAdjacentElement("afterend", subEl);
+    enableLiveEditing(tr.closest("table"));
+  };
+
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "🗑️";
+  delBtn.className = "text-red-600";
+  delBtn.onclick = async () => {
+    await deleteRow(row.id);
+    tr.remove();
+  };
+
+  tdActions.appendChild(addSubBtn);
+  tdActions.appendChild(delBtn);
+  tr.appendChild(tdActions);
+
+  return tr;
+}
+
+// ============================================================
+//  🔹 Edição ao vivo (colunas + células)
+// ============================================================
+
+function enableLiveEditing(tableEl) {
+  // Editar nome de coluna
+  tableEl.querySelectorAll("th[data-col-id]").forEach(th => {
+    th.contentEditable = true;
+    th.addEventListener("blur", async e => {
+      const colId = e.target.dataset.colId;
+      const newName = e.target.innerText.trim();
+      await updateColumn(colId, newName);
+    });
+  });
+
+  // Editar célula
+  tableEl.querySelectorAll("td[data-cell-id]").forEach(td => {
+    td.contentEditable = true;
+    td.addEventListener("blur", async e => {
+      const cellId = e.target.dataset.cellId;
+      const newValue = e.target.innerText.trim();
+      await updateCell(cellId, newValue);
+    });
+  });
+}
+
+// ============================================================
+//  🔹 Inicialização
+// ============================================================
+
+(async function init() {
+  document.getElementById("sheetsContainer").innerHTML = `
+    <div class="text-center text-gray-500">
+      <i class="fas fa-spinner fa-spin mr-2"></i>Carregando planilhas...
+    </div>`;
+
+  const sheets = await getSheets();
+
+  const container = document.getElementById("sheetsContainer");
+  container.innerHTML = sheets.map(renderSheetCard).join("");
+
+  // ativa edição ao vivo em todas as tabelas
+  container.querySelectorAll(".dynamic-table").forEach(enableLiveEditing);
+})();
 </script>
 {% endblock %}

@@ -8,7 +8,10 @@ from django.contrib.auth import logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q, Count
+from django.forms import HiddenInput
 from workspaces.models import Workspace
+from elements.models import ContratosElement
+from elements.forms import ContratosElementForm
 
 def jwt_required(view_func):
     @wraps(view_func)
@@ -50,6 +53,8 @@ def login_view(request):
 def home(request):
     return render(request, 'home/home.html')
 
+
+
 @jwt_required
 def workspace(request):
     if not request.user.is_authenticated:
@@ -64,6 +69,101 @@ def new_workspace(request):
 
 def board(request):
     return render(request, 'board/board.html')
+
+def sheet_detail2(request):
+    from sheets.models import Sheet
+    from boards.models import Board
+
+    sheet_id = request.GET.get('sheet') or request.GET.get('sheet_id')
+    board_id = request.GET.get('board')
+
+    sheet = None
+    board = None
+    workspace = None
+
+    contratos_qs = ContratosElement.objects.all().select_related('sheet', 'board')
+
+    if sheet_id:
+        contratos_qs = contratos_qs.filter(sheet_id=sheet_id)
+        sheet = Sheet.objects.filter(id=sheet_id).select_related('board__workspace').first()
+        if sheet:
+            board = sheet.board
+            workspace = board.workspace if board else None
+    elif board_id:
+        contratos_qs = contratos_qs.filter(board_id=board_id)
+        board = Board.objects.filter(id=board_id).select_related('workspace').first()
+        if board:
+            workspace = board.workspace
+
+    if sheet and not board:
+        board = sheet.board
+        workspace = board.workspace if board else workspace
+
+    initial = {}
+    if sheet:
+        initial['sheet'] = sheet
+    if board:
+        initial['board'] = board
+
+    if request.method == 'POST':
+        form = ContratosElementForm(request.POST, initial=initial)
+    else:
+        form = ContratosElementForm(initial=initial)
+
+    sheet_queryset = Sheet.objects.select_related('board').all().order_by('nome')
+    board_queryset = Board.objects.all().order_by('nome')
+
+    if board:
+        sheet_queryset = sheet_queryset.filter(board=board)
+
+    form.fields['sheet'].queryset = sheet_queryset
+    form.fields['board'].queryset = board_queryset
+
+    if sheet:
+        form.fields['sheet'].widget = HiddenInput()
+    if board:
+        form.fields['board'].widget = HiddenInput()
+
+    if request.method == 'POST' and form.is_valid():
+        selected_sheet = form.cleaned_data.get('sheet') or sheet
+        selected_board = form.cleaned_data.get('board') or board
+
+        if selected_sheet and not selected_board:
+            selected_board = selected_sheet.board
+
+        if not (selected_board or selected_sheet):
+            form.add_error(None, 'Selecione uma pasta ou planilha válida para vincular o contrato.')
+        else:
+            contrato = form.save(commit=False)
+            contrato.sheet = selected_sheet
+            contrato.board = selected_board
+            contrato.save()
+
+            query_string = request.META.get('QUERY_STRING')
+            redirect_url = request.path
+            if query_string:
+                redirect_url = f"{redirect_url}?{query_string}"
+            return redirect(redirect_url)
+
+    available_targets = bool(
+        sheet or
+        board or
+        form.fields['board'].queryset.exists() or
+        form.fields['sheet'].queryset.exists()
+    )
+
+    context = {
+        'sheet': sheet,
+        'board': board,
+        'workspace': workspace,
+        'contratos': contratos_qs.order_by('id'),
+        'form': form,
+        'can_add_contrato': available_targets,
+        'show_board_field': board is None,
+        'show_sheet_field': sheet is None,
+    }
+
+    return render(request, 'sheet/detail2.html', context)
 
 def new_board(request):
     # Pass available workspaces to the new board form so the user can choose
@@ -138,17 +238,33 @@ def workspace_detail(request, workspace_id):
     })
 
 @jwt_required
-def board_detail(request, board_id):
+def board_detail(request, workspace_id, board_id):
     """Renderiza a página de detalhe de uma pasta específica (planilha)."""
     from boards.models import Board
+    from sheets.models import Sheet
     
-    board = Board.objects.filter(id=board_id).select_related('workspace').first()
+    board = Board.objects.filter(id=board_id, workspace_id=workspace_id).select_related('workspace').first()
     if not board:
+        # Se o workspace existir, redireciona para a listagem dele; caso contrário, volta para a página geral
+        workspace_exists = Workspace.objects.filter(id=workspace_id).exists()
+        if workspace_exists:
+            return redirect('workspace_detail', workspace_id=workspace_id)
         return redirect('workspace')
+    
+    # Buscar planilhas do board
+    sheets = Sheet.objects.filter(board=board).order_by('-created_at')
+    
+    # Debug
+    print(f"DEBUG board_detail: Board ID={board.id}, Nome={board.nome}")
+    print(f"DEBUG board_detail: Total de planilhas encontradas: {sheets.count()}")
+    for sheet in sheets:
+        print(f"  - Sheet ID {sheet.id}: {sheet.nome}")
     
     return render(request, 'board/detail.html', {
         'board': board,
         'workspace': board.workspace,
+        'sheets': sheets,
+        'workspace_id': workspace_id,
     })
 
 @jwt_required

@@ -477,7 +477,7 @@
             <div class="workspace-card">
                 <div class="workspace-header">
                     <h3 class="workspace-title">{{ board.nome }}</h3>
-                    <a class="workspace-menu" href="{% url 'board_detail' board.id %}">
+                    <a class="workspace-menu" href="{% url 'board_detail' workspace.id board.id %}">
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>

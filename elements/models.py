@@ -41,6 +41,13 @@ class ContratosElement(
     SoftDeleteMixin,
     models.Model
 ):
+    STATUS_CHOICES = [
+        ('ativo', 'Ativo'),
+        ('inativo', 'Inativo'),
+        ('pendente', 'Pendente'),
+        ('concluido', 'Concluído'),
+    ]
+    
     empresa = models.CharField(
         max_length=30,
         verbose_name="Empresa"
@@ -48,6 +55,12 @@ class ContratosElement(
     objeto = models.CharField(
         max_length=200,
         verbose_name="Objeto"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='ativo',
+        verbose_name="Status"
     )
     qtd_total_itens = models.IntegerField(
         default=0,

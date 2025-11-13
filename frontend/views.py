@@ -5,6 +5,7 @@ from django.http import JsonResponse
 import jwt
 from django.conf import settings
 from django.contrib.auth import logout
+from elements.models import ContratosElement
 
 def jwt_required(view_func):
     @wraps(view_func)
@@ -31,7 +32,13 @@ def login_view(request):
     return render(request, 'login/login.html')
 
 def home(request):
-    return render(request, 'home/home.html')
+    # Carregar todos os contratos para a página home
+    contratos = ContratosElement.objects.all().order_by('id')
+    
+    context = {
+        'contracts': contratos,
+    }
+    return render(request, 'home/home.html', context)
 
 def workspace(request):
     return render(request, 'workspace/workspace.html')

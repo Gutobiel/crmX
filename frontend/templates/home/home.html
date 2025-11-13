@@ -17,15 +17,15 @@
         <div class="board-title">
             <h2>Estrutura de Contratos</h2>
             <div class="board-actions">
-                <button class="btn-action">
+                <button class="btn-action" id="btnFiltrar" title="Filtros avançados">
                     <i class="fas fa-filter"></i>
                     Filtrar
                 </button>
-                <button class="btn-action">
+                <button class="btn-action" id="btnExportar" title="Exportar para Excel">
                     <i class="fas fa-download"></i>
                     Exportar
                 </button>
-                <button class="btn-primary">
+                <button class="btn-primary" id="btnNovoContrato">
                     <i class="fas fa-plus"></i>
                     Novo Contrato
                 </button>
@@ -36,14 +36,48 @@
     <!-- Toolbar -->
     <div class="toolbar">
         <div class="toolbar-left">
-            <button class="btn-filter">
-                <i class="fas fa-sliders-h"></i>
-                Todos os Status
-            </button>
-            <button class="btn-filter">
-                <i class="fas fa-user"></i>
-                Todas Empresas
-            </button>
+            <div style="position: relative; display: inline-block;">
+                <button class="btn-filter" id="btnFiltroStatus">
+                    <i class="fas fa-sliders-h"></i>
+                    <span id="statusFilterText">Todos os Status</span>
+                    <i class="fas fa-chevron-down" style="margin-left: 5px; font-size: 12px;"></i>
+                </button>
+                <div id="dropdownStatus" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 2px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 220px; z-index: 100; margin-top: 5px;">
+                    <div style="padding: 10px;">
+                        <div class="filter-option" data-status="all" style="padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px;">
+                            <i class="fas fa-list" style="margin-right: 8px; color: #667eea; width: 20px;"></i>Todos os Status
+                        </div>
+                        <div class="filter-option" data-status="ativo" style="padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px;">
+                            <i class="fas fa-check-circle" style="margin-right: 8px; color: #28a745; width: 20px;"></i>✓ Ativo
+                        </div>
+                        <div class="filter-option" data-status="inativo" style="padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px;">
+                            <i class="fas fa-times-circle" style="margin-right: 8px; color: #dc3545; width: 20px;"></i>✗ Inativo
+                        </div>
+                        <div class="filter-option" data-status="pendente" style="padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px;">
+                            <i class="fas fa-clock" style="margin-right: 8px; color: #ffc107; width: 20px;"></i>⏳ Pendente
+                        </div>
+                        <div class="filter-option" data-status="concluido" style="padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px;">
+                            <i class="fas fa-check-double" style="margin-right: 8px; color: #17a2b8; width: 20px;"></i>✔ Concluído
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="position: relative; display: inline-block; margin-left: 10px;">
+                <button class="btn-filter" id="btnFiltroEmpresa">
+                    <i class="fas fa-building"></i>
+                    <span id="empresaFilterText">Todas Empresas</span>
+                    <i class="fas fa-chevron-down" style="margin-left: 5px; font-size: 12px;"></i>
+                </button>
+                <div id="dropdownEmpresa" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 2px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 250px; max-height: 300px; overflow-y: auto; z-index: 100; margin-top: 5px;">
+                    <div style="padding: 10px;">
+                        <div class="filter-option-empresa" data-empresa="all" style="padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px; font-weight: 600; border-bottom: 2px solid #f0f0f0; margin-bottom: 5px;">
+                            <i class="fas fa-list" style="margin-right: 8px; color: #667eea; width: 20px;"></i>Todas Empresas
+                        </div>
+                        <!-- As empresas serão carregadas dinamicamente aqui -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -68,17 +102,18 @@
             <table class="contracts-table">
                 <thead>
                     <tr>
-                        <th class="checkbox-col">
+                        <th class="checkbox-col" width="40">
                             <input type="checkbox" id="selectAll">
                         </th>
+                        <th width="50"></th>
                         <th class="element-col">Elemento</th>
                         <th class="company-col">Empresa</th>
+                        <th class="status-col" width="120">Status</th>
                         <th class="object-col">Objeto</th>
                         <th class="qty-col">Qtd Total Itens</th>
                         <th class="value-prev-col">Valor Total Anterior</th>
                         <th class="value-adj-col">Valor Total Reajustado</th>
-                        <th class="docs-col">Documentação</th>
-                        <th class="actions-col">Ações</th>
+                        <th class="actions-col" width="120">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,87 +123,77 @@
                         <td class="checkbox-col">
                             <input type="checkbox" name="contract_select" value="{{ contract.id }}">
                         </td>
+                        <td>
+                            <button class="expand-btn" data-contract-id="{{ contract.id }}" title="Expandir/Recolher subelementos" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #333781; padding: 5px; transition: transform 0.2s;">
+                                ▶
+                            </button>
+                        </td>
                         <td class="element-col">
-                            <div class="element-info">
-                                <span class="element-number">{{ contract.element_number }}</span>
-                                <div class="element-icons">
-                                    <i class="fas fa-chevron-down toggle-subelements" title="Expandir"></i>
-                                    <i class="fas fa-paperclip" title="Anexos"></i>
-                                </div>
-                            </div>
+                            <span class="element-number">{{ contract.id }}</span>
                         </td>
                         <td class="company-col">
-                            <span class="company-tag">{{ contract.company_code }}</span>
+                            <span class="company-tag">{{ contract.empresa|default:'-' }}</span>
+                        </td>
+                        <td class="status-col">
+                            <select class="status-dropdown" data-contract-id="{{ contract.id }}" 
+                                    style="padding: 6px 30px 6px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s; background-position: right 8px center; background-repeat: no-repeat; background-size: 12px; appearance: none;">
+                                <option value="ativo" {% if contract.status == 'ativo' %}selected{% endif %} style="color: #28a745;">✓ Ativo</option>
+                                <option value="inativo" {% if contract.status == 'inativo' %}selected{% endif %} style="color: #dc3545;">✗ Inativo</option>
+                                <option value="pendente" {% if contract.status == 'pendente' %}selected{% endif %} style="color: #ffc107;">⏳ Pendente</option>
+                                <option value="concluido" {% if contract.status == 'concluido' %}selected{% endif %} style="color: #17a2b8;">✔ Concluído</option>
+                            </select>
                         </td>
                         <td class="object-col">
-                            <span class="object-text">{{ contract.object_description }}</span>
+                            <span class="object-text">{{ contract.objeto|default:'-' }}</span>
                         </td>
                         <td class="qty-col">
-                            <span class="qty-value">{{ contract.total_quantity }}</span>
+                            <span class="qty-value">{{ contract.qtd_total_itens|default:0 }}</span>
                         </td>
                         <td class="value-prev-col">
-                            <span class="value-amount">R$ {{ contract.previous_value|floatformat:2 }}</span>
+                            <span class="value-amount">R$ {{ contract.valor_total_anterior|default:0|floatformat:2 }}</span>
                         </td>
                         <td class="value-adj-col">
-                            <span class="value-amount">R$ {{ contract.adjusted_value|floatformat:2 }}</span>
-                        </td>
-                        <td class="docs-col">
-                            <span class="doc-percentage">{{ contract.documentation_percent }}%</span>
+                            <span class="value-amount">R$ {{ contract.valor_total_reajustado|default:0|floatformat:2 }}</span>
                         </td>
                         <td class="actions-col">
-                            <button class="btn-icon" title="Editar">
-                                <i class="fas fa-edit"></i>
+                            <button class="btn-icon add-subelement-btn" data-contract-id="{{ contract.id }}" title="Adicionar subelemento" style="background: #ffc107; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+                                <i class="fas fa-plus"></i>
                             </button>
-                            <button class="btn-icon" title="Excluir">
+                            <button class="btn-icon delete-contract-btn" data-contract-id="{{ contract.id }}" title="Excluir contrato" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
 
                     <!-- Subelements Section (oculto inicialmente) -->
-                    <tr class="subelements-section" style="display: none;" data-parent="{{ contract.id }}">
-                        <td colspan="9">
-                            <table class="subelements-table">
-                                <thead>
-                                    <tr>
-                                        <th class="subelement-col">Subelemento</th>
-                                        <th class="quantity-col">Quantidade</th>
-                                        <th class="unit-value-col">Valor Unitário</th>
-                                        <th class="total-value-col">Valor Total</th>
-                                        <th class="ipc-col">IPC</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for subelement in contract.subelements.all %}
-                                    <tr>
-                                        <td class="subelement-col">
-                                            <div class="subelement-info">
-                                                <i class="fas fa-cube"></i>
-                                                <span>{{ subelement.description }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="quantity-col">{{ subelement.quantity }}</td>
-                                        <td class="unit-value-col">R$ {{ subelement.unit_value|floatformat:2 }}</td>
-                                        <td class="total-value-col">R$ {{ subelement.total_value|floatformat:2 }}</td>
-                                        <td class="ipc-col">{{ subelement.ipc_percent }}%</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="5" style="text-align: center; color: #999;">
-                                            Nenhum subelemento cadastrado
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                    <tr class="add-subelement-row">
-                                        <td colspan="5">
-                                            <button class="btn-add-subelement">
-                                                <i class="fas fa-plus"></i>
-                                                Adicionar Subelemento
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <tr class="subelements-section" style="display: none; background-color: #f8f9fa;" data-parent="{{ contract.id }}">
+                        <td colspan="10">
+                            <div style="padding: 20px 20px 20px 90px;">
+                                <h5 style="margin-bottom: 15px; color: #333; font-weight: 600;">📋 Subelementos</h5>
+                                <table class="subelements-table" style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
+                                    <thead>
+                                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Nome</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Quantidade</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Valor Unit. Anterior</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Valor Total</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">IPCA (%)</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Valor Unit. Reajustado</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Valor Total Reajustado</th>
+                                            <th style="color: white; padding: 12px; text-align: left; font-weight: 600;">Comentário</th>
+                                            <th style="color: white; padding: 12px; text-align: center; width: 100px; font-weight: 600;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="subelements-body" data-contract-id="{{ contract.id }}">
+                                        <tr>
+                                            <td colspan="9" style="text-align: center; padding: 30px; color: #999;">
+                                                <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                                                Carregando subelementos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
@@ -184,7 +209,7 @@
 
             <!-- Add Element Row -->
             <div class="add-element-row">
-                <button class="btn-add-element">
+                <button class="btn-add-element" id="btnAdicionarElemento">
                     <i class="fas fa-plus-circle"></i>
                     Adicionar Elemento
                 </button>
@@ -201,8 +226,629 @@
         </div>
     </div>
 
-    <script>
+    <!-- Modal Novo Contrato -->
+    <div id="modalNovoContrato" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto;">
+        <div style="background-color: #fff; margin: 5% auto; padding: 0; width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideDown 0.3s;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 30px; border-radius: 12px 12px 0 0; color: white;">
+                <h3 style="margin: 0; font-size: 24px; font-weight: 600;">
+                    <i class="fas fa-plus-circle"></i> Novo Contrato
+                </h3>
+                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Preencha os dados do novo contrato</p>
+            </div>
+            
+            <!-- Body -->
+            <form id="formNovoContrato" style="padding: 30px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-building" style="color: #667eea; margin-right: 8px;"></i>Empresa *
+                    </label>
+                    <input type="text" id="inputEmpresa" required 
+                           style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                           placeholder="Ex: Empresa ABC Ltda"
+                           onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+                           onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-file-contract" style="color: #667eea; margin-right: 8px;"></i>Objeto do Contrato *
+                    </label>
+                    <textarea id="inputObjeto" required rows="3"
+                              style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; resize: vertical; box-sizing: border-box; font-family: inherit;"
+                              placeholder="Descreva o objeto do contrato..."
+                              onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+                              onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"></textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-info-circle" style="color: #667eea; margin-right: 8px;"></i>Status *
+                    </label>
+                    <select id="inputStatus" required
+                            style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box; cursor: pointer;"
+                            onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+                            onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                        <option value="ativo" style="color: #28a745;">✓ Ativo</option>
+                        <option value="inativo" style="color: #dc3545;">✗ Inativo</option>
+                        <option value="pendente" style="color: #ffc107;">⏳ Pendente</option>
+                        <option value="concluido" style="color: #17a2b8;">✔ Concluído</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-hashtag" style="color: #667eea; margin-right: 8px;"></i>Qtd Total Itens *
+                        </label>
+                        <input type="number" id="inputQtdItens" required min="0" value="0"
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                               onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+                               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-dollar-sign" style="color: #667eea; margin-right: 8px;"></i>Valor Total Anterior *
+                        </label>
+                        <input type="number" id="inputValorAnterior" required min="0" step="0.01" value="0"
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                               placeholder="0.00"
+                               onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+                               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-chart-line" style="color: #28a745; margin-right: 8px;"></i>Valor Total Reajustado *
+                    </label>
+                    <input type="number" id="inputValorReajustado" required min="0" step="0.01" value="0"
+                           style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                           placeholder="0.00"
+                           onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'"
+                           onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                </div>
+
+                <!-- Footer com Botões -->
+                <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <button type="button" id="btnCancelarContrato"
+                            style="padding: 12px 24px; border: 2px solid #e0e0e0; background: white; color: #666; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s;"
+                            onmouseover="this.style.background='#f5f5f5'; this.style.borderColor='#ccc'"
+                            onmouseout="this.style.background='white'; this.style.borderColor='#e0e0e0'">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit"
+                            style="padding: 12px 24px; border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(102,126,234,0.3);"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(102,126,234,0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'">
+                        <i class="fas fa-save"></i> Salvar Contrato
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Elemento -->
+    <div id="modalAdicionarElemento" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto;">
+        <div style="background-color: #fff; margin: 5% auto; padding: 0; width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideDown 0.3s;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 20px 30px; border-radius: 12px 12px 0 0; color: white;">
+                <h3 style="margin: 0; font-size: 24px; font-weight: 600;">
+                    <i class="fas fa-plus-circle"></i> Adicionar Elemento
+                </h3>
+                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Preencha os dados do novo elemento</p>
+            </div>
+            
+            <!-- Body -->
+            <form id="formAdicionarElemento" style="padding: 30px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-building" style="color: #28a745; margin-right: 8px;"></i>Empresa *
+                    </label>
+                    <input type="text" id="inputEmpresaElemento" required 
+                           style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                           placeholder="Ex: Empresa ABC Ltda"
+                           onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 3px rgba(40,167,69,0.1)'"
+                           onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-file-contract" style="color: #28a745; margin-right: 8px;"></i>Objeto *
+                    </label>
+                    <textarea id="inputObjetoElemento" required rows="3"
+                              style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; resize: vertical; box-sizing: border-box; font-family: inherit;"
+                              placeholder="Descreva o objeto..."
+                              onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 3px rgba(40,167,69,0.1)'"
+                              onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"></textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-info-circle" style="color: #28a745; margin-right: 8px;"></i>Status *
+                    </label>
+                    <select id="inputStatusElemento" required
+                            style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box; cursor: pointer;"
+                            onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 3px rgba(40,167,69,0.1)'"
+                            onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                        <option value="ativo" style="color: #28a745;">✓ Ativo</option>
+                        <option value="inativo" style="color: #dc3545;">✗ Inativo</option>
+                        <option value="pendente" style="color: #ffc107;">⏳ Pendente</option>
+                        <option value="concluido" style="color: #17a2b8;">✔ Concluído</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-hashtag" style="color: #28a745; margin-right: 8px;"></i>Qtd Total Itens *
+                        </label>
+                        <input type="number" id="inputQtdItensElemento" required min="0" value="0"
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                               onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 3px rgba(40,167,69,0.1)'"
+                               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-dollar-sign" style="color: #28a745; margin-right: 8px;"></i>Valor Total Anterior *
+                        </label>
+                        <input type="number" id="inputValorAnteriorElemento" required min="0" step="0.01" value="0"
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                               placeholder="0.00"
+                               onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 3px rgba(40,167,69,0.1)'"
+                               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-chart-line" style="color: #28a745; margin-right: 8px;"></i>Valor Total Reajustado *
+                    </label>
+                    <input type="number" id="inputValorReajustadoElemento" required min="0" step="0.01" value="0"
+                           style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                           placeholder="0.00"
+                           onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 3px rgba(40,167,69,0.1)'"
+                           onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                </div>
+
+                <!-- Footer com Botões -->
+                <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <button type="button" id="btnCancelarElemento"
+                            style="padding: 12px 24px; border: 2px solid #e0e0e0; background: white; color: #666; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s;"
+                            onmouseover="this.style.background='#f5f5f5'; this.style.borderColor='#ccc'"
+                            onmouseout="this.style.background='white'; this.style.borderColor='#e0e0e0'">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit"
+                            style="padding: 12px 24px; border: none; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(40,167,69,0.3);"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(40,167,69,0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(40,167,69,0.3)'">
+                        <i class="fas fa-save"></i> Salvar Elemento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Subelemento -->
+    <div id="modalAdicionarSubelemento" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow: auto;">
+        <div style="background-color: #fff; margin: 3% auto; padding: 0; width: 700px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideDown 0.3s;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); padding: 20px 30px; border-radius: 12px 12px 0 0; color: white;">
+                <h3 style="margin: 0; font-size: 24px; font-weight: 600;">
+                    <i class="fas fa-plus"></i> Adicionar Subelemento
+                </h3>
+                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Preencha os dados do novo subelemento</p>
+            </div>
+            
+            <!-- Body -->
+            <form id="formAdicionarSubelemento" style="padding: 30px;">
+                <input type="hidden" id="inputContratoId">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-tag" style="color: #ffc107; margin-right: 8px;"></i>Nome do Subelemento *
+                    </label>
+                    <input type="text" id="inputNomeSubelemento" required 
+                           style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                           placeholder="Ex: Item 1 - Serviço de consultoria"
+                           onfocus="this.style.borderColor='#ffc107'; this.style.boxShadow='0 0 0 3px rgba(255,193,7,0.1)'"
+                           onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-sort-numeric-up" style="color: #ffc107; margin-right: 8px;"></i>Quantidade *
+                        </label>
+                        <input type="number" id="inputQuantidade" required min="1" value="1"
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                               onfocus="this.style.borderColor='#ffc107'; this.style.boxShadow='0 0 0 3px rgba(255,193,7,0.1)'"
+                               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                            <i class="fas fa-dollar-sign" style="color: #ffc107; margin-right: 8px;"></i>Valor Unitário Anterior *
+                        </label>
+                        <input type="number" id="inputValorUnitarioAnterior" required min="0" step="0.01" value="0"
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                               placeholder="0.00"
+                               onfocus="this.style.borderColor='#ffc107'; this.style.boxShadow='0 0 0 3px rgba(255,193,7,0.1)'"
+                               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-percent" style="color: #ffc107; margin-right: 8px;"></i>IPCA (%) *
+                    </label>
+                    <input type="number" id="inputValorIpca" required min="0" step="0.01" value="0"
+                           style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; box-sizing: border-box;"
+                           placeholder="Ex: 4.50"
+                           onfocus="this.style.borderColor='#ffc107'; this.style.boxShadow='0 0 0 3px rgba(255,193,7,0.1)'"
+                           onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'">
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">
+                        <i class="fas fa-comment" style="color: #ffc107; margin-right: 8px;"></i>Comentário
+                    </label>
+                    <textarea id="inputComentario" rows="3"
+                              style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s; resize: vertical; box-sizing: border-box; font-family: inherit;"
+                              placeholder="Observações adicionais (opcional)..."
+                              onfocus="this.style.borderColor='#ffc107'; this.style.boxShadow='0 0 0 3px rgba(255,193,7,0.1)'"
+                              onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none'"></textarea>
+                </div>
+
+                <!-- Cálculos Automáticos (Preview) -->
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #ffc107;">
+                    <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 14px; font-weight: 600;">
+                        <i class="fas fa-calculator"></i> Valores Calculados
+                    </h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; color: #856404;">
+                        <div><strong>Valor Total:</strong> <span id="previewValorTotal">R$ 0,00</span></div>
+                        <div><strong>Valor Unit. Reajustado:</strong> <span id="previewValorUnitReaj">R$ 0,00</span></div>
+                        <div style="grid-column: 1 / -1;"><strong>Valor Total Reajustado:</strong> <span id="previewValorTotalReaj" style="font-size: 16px; color: #28a745;">R$ 0,00</span></div>
+                    </div>
+                </div>
+
+                <!-- Footer com Botões -->
+                <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <button type="button" id="btnCancelarSubelemento"
+                            style="padding: 12px 24px; border: 2px solid #e0e0e0; background: white; color: #666; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s;"
+                            onmouseover="this.style.background='#f5f5f5'; this.style.borderColor='#ccc'"
+                            onmouseout="this.style.background='white'; this.style.borderColor='#e0e0e0'">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit"
+                            style="padding: 12px 24px; border: none; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(255,193,7,0.3);"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255,193,7,0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255,193,7,0.3)'">
+                        <i class="fas fa-save"></i> Salvar Subelemento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script type="module">
+        import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
+
+        const API_SUBELEMENTS = '/api/v1/contratos-subelements/';
+        const API_CONTRATOS = '/api/v1/contratos/';
+
+        const formatCurrency = (value) => {
+            const numeric = Number(value);
+            if (Number.isNaN(numeric)) return 'R$ 0,00';
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+            }).format(numeric);
+        };
+
+        // Carregar subelementos
+        const loadSubelements = async (contractId) => {
+            const tbody = document.querySelector(`.subelements-body[data-contract-id="${contractId}"]`);
+            if (!tbody) return;
+
+            try {
+                const headers = await getAuthHeaders();
+                const response = await fetch(`${API_SUBELEMENTS}?element=${contractId}`, { headers });
+
+                if (!response.ok) throw new Error('Erro ao carregar subelementos');
+
+                const subelements = await response.json();
+                
+                if (subelements.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px; color: #999;"><i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>Nenhum subelemento encontrado. Clique no botão + para adicionar.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = subelements.map(sub => `
+                    <tr data-subelement-id="${sub.id}" style="border-bottom: 1px solid #e9ecef;">
+                        <td style="padding: 12px;">${sub.nome || '-'}</td>
+                        <td style="padding: 12px;">${sub.quantidade || 0}</td>
+                        <td style="padding: 12px;">${formatCurrency(sub.valor_unitario_anterior || 0)}</td>
+                        <td style="padding: 12px; font-weight: 600;">${formatCurrency(sub.valor_total || 0)}</td>
+                        <td style="padding: 12px;">${sub.valor_ipca || 0}%</td>
+                        <td style="padding: 12px; color: #28a745; font-weight: 600;">${formatCurrency(sub.valor_unitario_reajustado || 0)}</td>
+                        <td style="padding: 12px; color: #28a745; font-weight: 600;">${formatCurrency(sub.valor_total_reajustado || 0)}</td>
+                        <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${sub.comentario || '-'}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button class="delete-subelement-btn" data-subelement-id="${sub.id}" title="Excluir" style="background: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                setupDeleteSubelementButtons();
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 30px; color: #dc3545;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>Erro: ${error.message}</td></tr>`;
+            }
+        };
+
+        // Modal Adicionar Subelemento
+        const modalSubelemento = document.getElementById('modalAdicionarSubelemento');
+        const btnCancelarSubelemento = document.getElementById('btnCancelarSubelemento');
+        const formSubelemento = document.getElementById('formAdicionarSubelemento');
+
+        // Função para calcular valores em tempo real
+        const calcularValores = () => {
+            const quantidade = parseFloat(document.getElementById('inputQuantidade').value) || 0;
+            const valorUnitario = parseFloat(document.getElementById('inputValorUnitarioAnterior').value) || 0;
+            const ipca = parseFloat(document.getElementById('inputValorIpca').value) || 0;
+
+            const valorTotal = quantidade * valorUnitario;
+            const valorUnitReajustado = valorUnitario + (valorUnitario * (ipca / 100));
+            const valorTotalReajustado = quantidade * valorUnitReajustado;
+
+            document.getElementById('previewValorTotal').textContent = formatCurrency(valorTotal);
+            document.getElementById('previewValorUnitReaj').textContent = formatCurrency(valorUnitReajustado);
+            document.getElementById('previewValorTotalReaj').textContent = formatCurrency(valorTotalReajustado);
+        };
+
+        // Adicionar listeners para calcular em tempo real
+        document.getElementById('inputQuantidade')?.addEventListener('input', calcularValores);
+        document.getElementById('inputValorUnitarioAnterior')?.addEventListener('input', calcularValores);
+        document.getElementById('inputValorIpca')?.addEventListener('input', calcularValores);
+
+        // Fechar modal subelemento
+        btnCancelarSubelemento?.addEventListener('click', function() {
+            modalSubelemento.style.display = 'none';
+            formSubelemento.reset();
+            calcularValores();
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function(event) {
+            if (event.target === modalSubelemento) {
+                modalSubelemento.style.display = 'none';
+                formSubelemento.reset();
+                calcularValores();
+            }
+        });
+
+        // Adicionar subelemento via modal
+        const addSubelement = async (contractId) => {
+            document.getElementById('inputContratoId').value = contractId;
+            modalSubelemento.style.display = 'block';
+            document.getElementById('inputNomeSubelemento').focus();
+            calcularValores();
+        };
+
+        // Submeter formulário subelemento
+        formSubelemento?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const contractId = document.getElementById('inputContratoId').value;
+            const nome = document.getElementById('inputNomeSubelemento').value;
+            const quantidade = document.getElementById('inputQuantidade').value;
+            const valorUnitario = document.getElementById('inputValorUnitarioAnterior').value;
+            const valorIpca = document.getElementById('inputValorIpca').value;
+            const comentario = document.getElementById('inputComentario').value;
+
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(API_SUBELEMENTS, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        element: contractId,
+                        nome: nome,
+                        quantidade: parseInt(quantidade),
+                        valor_unitario_anterior: parseFloat(valorUnitario),
+                        valor_ipca: parseFloat(valorIpca),
+                        comentario: comentario || ''
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Erro ao criar subelemento');
+                }
+
+                await loadSubelements(contractId);
+                alert('✅ Subelemento adicionado com sucesso!');
+                modalSubelemento.style.display = 'none';
+                formSubelemento.reset();
+                calcularValores();
+            } catch (error) {
+                alert(`❌ Erro: ${error.message}`);
+            }
+        });
+
+        // Excluir subelemento
+        const deleteSubelement = async (subelementId, contractId) => {
+            if (!confirm('⚠️ Deseja realmente excluir este subelemento?')) return;
+
+            try {
+                const headers = await getAuthHeaders();
+                const response = await fetch(`${API_SUBELEMENTS}${subelementId}/`, {
+                    method: 'DELETE',
+                    headers
+                });
+
+                if (!response.ok) throw new Error('Erro ao excluir subelemento');
+
+                await loadSubelements(contractId);
+                alert('✅ Subelemento excluído com sucesso!');
+            } catch (error) {
+                alert(`❌ Erro: ${error.message}`);
+            }
+        };
+
+        const setupDeleteSubelementButtons = () => {
+            document.querySelectorAll('.delete-subelement-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const subelementId = this.dataset.subelementId;
+                    const contractId = this.closest('.subelements-body').dataset.contractId;
+                    deleteSubelement(subelementId, contractId);
+                });
+            });
+        };
+
         // Expandir/colapsar subelementos
+        document.querySelectorAll('.expand-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const contractId = this.dataset.contractId;
+                const subelementsRow = document.querySelector(`.subelements-section[data-parent="${contractId}"]`);
+                
+                if (subelementsRow) {
+                    const isExpanded = subelementsRow.style.display !== 'none';
+                    
+                    if (!isExpanded) {
+                        subelementsRow.style.display = '';
+                        this.textContent = '▼';
+                        this.style.transform = 'rotate(90deg)';
+                        loadSubelements(contractId);
+                    } else {
+                        subelementsRow.style.display = 'none';
+                        this.textContent = '▶';
+                        this.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        });
+
+        // Adicionar subelemento
+        document.querySelectorAll('.add-subelement-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const contractId = this.dataset.contractId;
+                addSubelement(contractId);
+            });
+        });
+
+        // Excluir contrato
+        document.querySelectorAll('.delete-contract-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                if (!confirm('⚠️ Deseja realmente excluir este contrato?')) return;
+                
+                const contractId = this.dataset.contractId;
+                try {
+                    const headers = await getAuthHeaders();
+                    const response = await fetch(`${API_CONTRATOS}${contractId}/`, {
+                        method: 'DELETE',
+                        headers
+                    });
+
+                    if (!response.ok) throw new Error('Erro ao excluir contrato');
+
+                    location.reload();
+                } catch (error) {
+                    alert(`❌ Erro: ${error.message}`);
+                }
+            });
+        });
+
+        // Alterar status do contrato
+        document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+            // Aplicar estilo baseado no status atual
+            const updateDropdownStyle = (select) => {
+                const value = select.value;
+                const colors = {
+                    'ativo': '#28a745',
+                    'inativo': '#dc3545',
+                    'pendente': '#ffc107',
+                    'concluido': '#17a2b8'
+                };
+                select.style.color = colors[value] || '#333';
+                select.style.borderColor = colors[value] || '#e0e0e0';
+                select.style.backgroundColor = colors[value] ? `${colors[value]}15` : 'white';
+            };
+
+            // Aplicar estilo inicial
+            updateDropdownStyle(dropdown);
+
+            // Event listener para mudança de status
+            dropdown.addEventListener('change', async function() {
+                const contractId = this.dataset.contractId;
+                const newStatus = this.value;
+                const previousStatus = this.dataset.previousStatus || this.value;
+
+                // Atualizar estilo imediatamente
+                updateDropdownStyle(this);
+
+                try {
+                    const headers = await getAuthHeaders();
+                    headers['Content-Type'] = 'application/json';
+
+                    const response = await fetch(`${API_CONTRATOS}${contractId}/`, {
+                        method: 'PATCH',
+                        headers,
+                        body: JSON.stringify({
+                            status: newStatus
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Erro ao atualizar status');
+                    }
+
+                    // Armazenar novo status
+                    this.dataset.previousStatus = newStatus;
+
+                    // Feedback visual sutil
+                    const row = this.closest('tr');
+                    row.style.transition = 'background-color 0.3s';
+                    row.style.backgroundColor = '#e8f5e9';
+                    setTimeout(() => {
+                        row.style.backgroundColor = '';
+                    }, 800);
+
+                } catch (error) {
+                    // Reverter para o status anterior em caso de erro
+                    this.value = previousStatus;
+                    updateDropdownStyle(this);
+                    alert(`❌ Erro ao atualizar status: ${error.message}`);
+                }
+            });
+
+            // Salvar status inicial
+            dropdown.dataset.previousStatus = dropdown.value;
+        });
+
+        // Expandir/colapsar subelementos (código antigo para compatibilidade)
         document.querySelectorAll('.toggle-subelements').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const row = this.closest('tr');
@@ -228,6 +874,338 @@
             document.querySelectorAll('input[name="contract_select"]').forEach(function(checkbox) {
                 checkbox.checked = this.checked;
             }.bind(this));
+        });
+
+        // Modal - Abrir/Fechar
+        const modal = document.getElementById('modalNovoContrato');
+        const btnNovoContrato = document.getElementById('btnNovoContrato');
+        const btnCancelar = document.getElementById('btnCancelarContrato');
+        const form = document.getElementById('formNovoContrato');
+
+        // Abrir modal
+        btnNovoContrato?.addEventListener('click', function() {
+            modal.style.display = 'block';
+            document.getElementById('inputEmpresa').focus();
+        });
+
+        // Fechar modal ao clicar no botão cancelar
+        btnCancelar?.addEventListener('click', function() {
+            modal.style.display = 'none';
+            form.reset();
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                form.reset();
+            }
+        });
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.style.display === 'block') {
+                modal.style.display = 'none';
+                form.reset();
+            }
+        });
+
+        // Submeter formulário
+        form?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const empresa = document.getElementById('inputEmpresa').value;
+            const objeto = document.getElementById('inputObjeto').value;
+            const status = document.getElementById('inputStatus').value;
+            const qtdItens = document.getElementById('inputQtdItens').value;
+            const valorAnterior = document.getElementById('inputValorAnterior').value;
+            const valorReajustado = document.getElementById('inputValorReajustado').value;
+
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(API_CONTRATOS, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        empresa: empresa,
+                        objeto: objeto,
+                        status: status,
+                        qtd_total_itens: parseInt(qtdItens),
+                        valor_total_anterior: parseFloat(valorAnterior),
+                        valor_total_reajustado: parseFloat(valorReajustado)
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Erro ao criar contrato');
+                }
+
+                alert('✅ Contrato criado com sucesso!');
+                modal.style.display = 'none';
+                form.reset();
+                location.reload();
+            } catch (error) {
+                alert(`❌ Erro: ${error.message}`);
+            }
+        });
+
+        // Variáveis de filtro globais
+        let filtroStatusAtual = 'all';
+        let filtroEmpresaAtual = 'all';
+
+        // Função para filtrar contratos
+        const filtrarContratos = () => {
+            const rows = document.querySelectorAll('.contract-row');
+            
+            rows.forEach(row => {
+                const empresa = row.querySelector('.company-tag')?.textContent.trim() || '';
+                const statusDropdown = row.querySelector('.status-dropdown');
+                const status = statusDropdown?.value || '';
+                
+                // Aplica filtros
+                const passaFiltroEmpresa = filtroEmpresaAtual === 'all' || empresa === filtroEmpresaAtual;
+                const passaFiltroStatus = filtroStatusAtual === 'all' || status === filtroStatusAtual;
+                
+                if (passaFiltroEmpresa && passaFiltroStatus) {
+                    row.style.display = '';
+                    // Também mostra a linha de subelementos se estiver expandida
+                    const contractId = row.dataset.contractId;
+                    const subelementsRow = document.querySelector(`.subelements-section[data-parent="${contractId}"]`);
+                    if (subelementsRow && subelementsRow.style.display !== 'none') {
+                        subelementsRow.style.display = '';
+                    }
+                } else {
+                    row.style.display = 'none';
+                    // Oculta também a linha de subelementos
+                    const contractId = row.dataset.contractId;
+                    const subelementsRow = document.querySelector(`.subelements-section[data-parent="${contractId}"]`);
+                    if (subelementsRow) {
+                        subelementsRow.style.display = 'none';
+                    }
+                }
+            });
+        };
+
+        // Carregar empresas únicas no dropdown
+        const carregarEmpresas = () => {
+            const empresas = new Set();
+            document.querySelectorAll('.company-tag').forEach(tag => {
+                const empresa = tag.textContent.trim();
+                if (empresa && empresa !== '-') {
+                    empresas.add(empresa);
+                }
+            });
+
+            const dropdownEmpresa = document.querySelector('#dropdownEmpresa > div');
+            // Mantém o "Todas Empresas"
+            const todasOption = dropdownEmpresa.querySelector('[data-empresa="all"]');
+            dropdownEmpresa.innerHTML = '';
+            dropdownEmpresa.appendChild(todasOption);
+
+            // Adiciona empresas
+            Array.from(empresas).sort().forEach(empresa => {
+                const div = document.createElement('div');
+                div.className = 'filter-option-empresa';
+                div.dataset.empresa = empresa;
+                div.style.cssText = 'padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 14px;';
+                div.innerHTML = `<i class="fas fa-building" style="margin-right: 8px; color: #667eea; width: 20px;"></i>${empresa}`;
+                dropdownEmpresa.appendChild(div);
+            });
+
+            setupFiltroEmpresa();
+        };
+
+        // Dropdown Status
+        const btnFiltroStatus = document.getElementById('btnFiltroStatus');
+        const dropdownStatus = document.getElementById('dropdownStatus');
+
+        btnFiltroStatus?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownStatus.style.display = dropdownStatus.style.display === 'none' ? 'block' : 'none';
+            dropdownEmpresa.style.display = 'none';
+        });
+
+        document.querySelectorAll('.filter-option').forEach(option => {
+            option.addEventListener('mouseenter', function() {
+                this.style.background = '#f0f0f0';
+            });
+            option.addEventListener('mouseleave', function() {
+                this.style.background = 'transparent';
+            });
+            option.addEventListener('click', function() {
+                filtroStatusAtual = this.dataset.status;
+                const text = this.textContent.trim();
+                document.getElementById('statusFilterText').textContent = text;
+                dropdownStatus.style.display = 'none';
+                filtrarContratos();
+            });
+        });
+
+        // Dropdown Empresa
+        const btnFiltroEmpresa = document.getElementById('btnFiltroEmpresa');
+        const dropdownEmpresa = document.getElementById('dropdownEmpresa');
+
+        btnFiltroEmpresa?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownEmpresa.style.display = dropdownEmpresa.style.display === 'none' ? 'block' : 'none';
+            dropdownStatus.style.display = 'none';
+        });
+
+        const setupFiltroEmpresa = () => {
+            document.querySelectorAll('.filter-option-empresa').forEach(option => {
+                option.addEventListener('mouseenter', function() {
+                    this.style.background = '#f0f0f0';
+                });
+                option.addEventListener('mouseleave', function() {
+                    this.style.background = 'transparent';
+                });
+                option.addEventListener('click', function() {
+                    filtroEmpresaAtual = this.dataset.empresa;
+                    const text = this.textContent.trim();
+                    document.getElementById('empresaFilterText').textContent = text;
+                    dropdownEmpresa.style.display = 'none';
+                    filtrarContratos();
+                });
+            });
+        };
+
+        // Fechar dropdowns ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (!btnFiltroStatus?.contains(e.target)) {
+                dropdownStatus.style.display = 'none';
+            }
+            if (!btnFiltroEmpresa?.contains(e.target)) {
+                dropdownEmpresa.style.display = 'none';
+            }
+        });
+
+        // Carregar empresas ao iniciar
+        setTimeout(() => {
+            carregarEmpresas();
+        }, 500);
+
+        // Botão Filtrar - limpar filtros
+        document.getElementById('btnFiltrar')?.addEventListener('click', function() {
+            if (filtroStatusAtual !== 'all' || filtroEmpresaAtual !== 'all') {
+                // Limpar filtros
+                filtroStatusAtual = 'all';
+                filtroEmpresaAtual = 'all';
+                document.getElementById('statusFilterText').textContent = 'Todos os Status';
+                document.getElementById('empresaFilterText').textContent = 'Todas Empresas';
+                filtrarContratos();
+                alert('✅ Filtros limpos!');
+            } else {
+                alert('ℹ️ Use os filtros abaixo para filtrar por Status ou Empresa');
+            }
+        });
+
+        // Botão Exportar
+        document.getElementById('btnExportar')?.addEventListener('click', async function() {
+            try {
+                const rows = document.querySelectorAll('.contract-row');
+                let csv = 'Elemento,Empresa,Status,Objeto,Qtd Total Itens,Valor Total Anterior,Valor Total Reajustado\n';
+                
+                rows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const elemento = row.querySelector('.element-number')?.textContent.trim() || '';
+                        const empresa = row.querySelector('.company-tag')?.textContent.trim() || '';
+                        const statusDropdown = row.querySelector('.status-dropdown');
+                        const status = statusDropdown?.options[statusDropdown.selectedIndex]?.text.trim() || '';
+                        const objeto = row.querySelector('.object-text')?.textContent.trim() || '';
+                        const qtd = row.querySelector('.qty-value')?.textContent.trim() || '0';
+                        const valorAnt = row.querySelector('.value-prev-col .value-amount')?.textContent.trim().replace('R$ ', '') || '0';
+                        const valorReaj = row.querySelector('.value-adj-col .value-amount')?.textContent.trim().replace('R$ ', '') || '0';
+                        
+                        csv += `"${elemento}","${empresa}","${status}","${objeto}","${qtd}","${valorAnt}","${valorReaj}"\n`;
+                    }
+                });
+
+                // Criar e baixar arquivo
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `contratos_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert('✅ Arquivo exportado com sucesso!');
+            } catch (error) {
+                alert(`❌ Erro ao exportar: ${error.message}`);
+            }
+        });
+
+        // Modal Adicionar Elemento
+        const modalElemento = document.getElementById('modalAdicionarElemento');
+        const btnAdicionarElemento = document.getElementById('btnAdicionarElemento');
+        const btnCancelarElemento = document.getElementById('btnCancelarElemento');
+        const formElemento = document.getElementById('formAdicionarElemento');
+
+        // Abrir modal elemento
+        btnAdicionarElemento?.addEventListener('click', function() {
+            modalElemento.style.display = 'block';
+            document.getElementById('inputEmpresaElemento').focus();
+        });
+
+        // Fechar modal elemento
+        btnCancelarElemento?.addEventListener('click', function() {
+            modalElemento.style.display = 'none';
+            formElemento.reset();
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function(event) {
+            if (event.target === modalElemento) {
+                modalElemento.style.display = 'none';
+                formElemento.reset();
+            }
+        });
+
+        // Submeter formulário elemento
+        formElemento?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const empresa = document.getElementById('inputEmpresaElemento').value;
+            const objeto = document.getElementById('inputObjetoElemento').value;
+            const status = document.getElementById('inputStatusElemento').value;
+            const qtdItens = document.getElementById('inputQtdItensElemento').value;
+            const valorAnterior = document.getElementById('inputValorAnteriorElemento').value;
+            const valorReajustado = document.getElementById('inputValorReajustadoElemento').value;
+
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(API_CONTRATOS, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        empresa: empresa,
+                        objeto: objeto,
+                        status: status,
+                        qtd_total_itens: parseInt(qtdItens),
+                        valor_total_anterior: parseFloat(valorAnterior),
+                        valor_total_reajustado: parseFloat(valorReajustado)
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Erro ao criar elemento');
+                }
+
+                alert('✅ Elemento criado com sucesso!');
+                modalElemento.style.display = 'none';
+                formElemento.reset();
+                location.reload();
+            } catch (error) {
+                alert(`❌ Erro: ${error.message}`);
+            }
         });
     </script>
 {% endblock %}

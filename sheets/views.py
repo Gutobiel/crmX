@@ -19,11 +19,16 @@ class SheetViewSet(viewsets.ModelViewSet):
     rql_filter_class = SheetFilterClass
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('board', 'board__workspace')
         board_id = self.request.query_params.get("board")
         if board_id:
             queryset = queryset.filter(board_id=board_id)
-        return queryset.prefetch_related('columns', 'rows')
+        return queryset.prefetch_related(
+            'columns',
+            'rows__cells__column',
+            'rows__subrows__cells__column',
+            'contratos_elements__subElements'
+        )
 
     @action(detail=False, methods=['get'])
     def templates(self, request):
@@ -245,6 +250,38 @@ class SheetViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Linha não encontrada'}, status=status.HTTP_404_NOT_FOUND)
         except Column.DoesNotExist:
             return Response({'error': 'Coluna não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['get'], url_path='nested')
+    def nested(self, request, pk=None):
+        """Retorna a planilha com dados aninhados de board, workspace e elementos relacionados."""
+        sheet = self.get_object()
+        serializer = self.get_serializer(sheet)
+
+        board = sheet.board
+        workspace = board.workspace if board else None
+
+        board_data = None
+        if board:
+            board_data = {
+                'id': board.id,
+                'nome': board.nome,
+                'workspace': board.workspace_id,
+                'created_at': board.created_at.isoformat() if hasattr(board, 'created_at') and board.created_at else None,
+                'updated_at': board.updated_at.isoformat() if hasattr(board, 'updated_at') and board.updated_at else None,
+            }
+
+        workspace_data = None
+        if workspace:
+            workspace_data = {
+                'id': workspace.id,
+                'nome': workspace.nome,
+            }
+
+        return Response({
+            'sheet': serializer.data,
+            'board': board_data,
+            'workspace': workspace_data,
+        })
 
 
 

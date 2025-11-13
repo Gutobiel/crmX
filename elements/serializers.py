@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Element, ElementCollaborator, ContratosElement, ProductElement
+from subElements.serializers import ContratosSubelementSerializer
 
 class ElementSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,6 +9,8 @@ class ElementSerializer(serializers.ModelSerializer):
 
 
 class ContratosElementSerializer(serializers.ModelSerializer):
+    subelements = ContratosSubelementSerializer(source='subElements', many=True, read_only=True)
+
     class Meta:
         model = ContratosElement
         fields = '__all__'

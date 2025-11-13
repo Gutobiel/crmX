@@ -255,6 +255,7 @@
     import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
     
     const boardId = "{{ board.id }}";
+    const boardDetailUrl = "{% url 'board_detail' workspace.id board.id %}";
     let selectedTipo = null;
 
     // Seleção de template
@@ -272,7 +273,7 @@
     // Cancelar
     window.cancelSheet = function() {
         if (confirm('Tem certeza que deseja cancelar? As alterações não serão salvas.')) {
-            window.location.href = `/board/${boardId}/`;
+            window.location.href = boardDetailUrl;
         }
     };
 
@@ -320,7 +321,7 @@
                 
                 const sheet = await response.json();
                 alert('Planilha criada com sucesso!');
-                window.location.href = `/board/${boardId}/`;
+                window.location.href = boardDetailUrl;
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao criar planilha: ' + error.message);

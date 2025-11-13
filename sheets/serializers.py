@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Sheet, Column, Row, Cell
+from elements.serializers import ContratosElementSerializer
 
 
 class CellSerializer(serializers.ModelSerializer):
@@ -18,11 +19,19 @@ class ColumnSerializer(serializers.ModelSerializer):
 
 class RowSerializer(serializers.ModelSerializer):
     cells = CellSerializer(many=True, read_only=True)
-    
+    subrows = serializers.SerializerMethodField()
+
     class Meta:
         model = Row
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_subrows(self, obj):
+        queryset = obj.subrows.all().order_by('order')
+        if not queryset:
+            return []
+        serializer = self.__class__(queryset, many=True, context=self.context)
+        return serializer.data
 
 
 class SheetSerializer(serializers.ModelSerializer):
@@ -34,6 +43,7 @@ class SheetSerializer(serializers.ModelSerializer):
     )
     columns = ColumnSerializer(many=True, read_only=True)  # ← Para leitura
     rows = RowSerializer(many=True, read_only=True)
+    contratos = ContratosElementSerializer(source='contratos_elements', many=True, read_only=True)
     
     class Meta:
         model = Sheet
@@ -67,9 +77,18 @@ class SheetSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Garante que as colunas sejam incluídas na resposta"""
         ret = super().to_representation(instance)
-        
-        # Force o carregamento das colunas
-        ret['columns'] = ColumnSerializer(instance.columns.all(), many=True).data
-        ret['rows'] = RowSerializer(instance.rows.all(), many=True).data
-        
+
+        # Reordena colunas e linhas principais para evitar consultas adicionais no frontend
+        columns_qs = instance.columns.all().order_by('order')
+        ret['columns'] = ColumnSerializer(columns_qs, many=True, context=self.context).data
+
+        main_rows = instance.rows.filter(is_subrow=False).order_by('order')
+        ret['rows'] = RowSerializer(main_rows, many=True, context=self.context).data
+
+        ret['contratos'] = ContratosElementSerializer(
+            instance.contratos_elements.all(),
+            many=True,
+            context=self.context
+        ).data
+
         return ret

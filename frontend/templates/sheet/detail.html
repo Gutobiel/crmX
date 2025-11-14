@@ -1,0 +1,621 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ sheet.nome }} - Planilha{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        .sheet-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .sheet-breadcrumb a {
+            color: #333781;
+            text-decoration: none;
+        }
+
+        .sheet-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .sheet-header {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .sheet-title-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sheet-title {
+            color: #302754;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sheet-type-badge {
+            padding: 6px 12px;
+            background: rgba(51,55,129,0.1);
+            color: #333781;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+        }
+
+        .sheet-context {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .sheet-context strong {
+            color: #302754;
+        }
+
+        .contracts-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+
+        .contracts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .contracts-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #302754;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            padding: 10px 18px;
+            background-color: #333781;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-primary:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #242955;
+        }
+
+        .add-form {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fc;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .add-form.active {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #302754;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-secondary {
+            padding: 10px 18px;
+            background-color: #6c757d;
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .contracts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .contracts-table th,
+        .contracts-table td {
+            border: 1px solid #e5e9f2;
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .contracts-table th {
+            background-color: #333781;
+            color: white;
+            font-weight: 600;
+        }
+
+        .contracts-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .contracts-actions .btn-secondary {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .editable-wrapper {
+            display: block;
+            width: 100%;
+            min-height: 20px;
+            padding: 4px 6px;
+            cursor: text;
+            background-color: #fffdf2;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .editable-wrapper:focus {
+            outline: none;
+            background-color: #ffffcc;
+        }
+
+        .editable-wrapper.cell-saving {
+            background-color: rgba(51,55,129,0.15);
+        }
+
+        .editable-wrapper.cell-error {
+            background-color: rgba(220,53,69,0.2);
+        }
+
+        .form-errors {
+            margin-top: 10px;
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block page_title %}
+    {{ sheet.nome }}
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="sheet-breadcrumb">
+        <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{{ sheet.nome }}</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="sheet-header">
+        <div class="header-top">
+            <div class="sheet-title-wrapper">
+                <h1 class="sheet-title">{{ sheet.nome }}</h1>
+                <span class="sheet-type-badge">{{ sheet.get_tipo_display }}</span>
+                <div class="sheet-context">
+                    <span><strong>Pasta:</strong> {{ board.nome }}</span>
+                      <span><strong>Area de trabalho:</strong> {{ workspace.nome }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="contracts-section">
+        <div class="contracts-header">
+            <h2>Contratos vinculados</h2>
+            <button type="button" class="btn-primary" id="toggleAddContract" aria-expanded="{% if form.errors %}true{% else %}false{% endif %}"{% if not can_add_contrato %} disabled{% endif %}>
+                Adicionar contrato
+            </button>
+        </div>
+
+        {% if not can_add_contrato %}
+            <p class="form-errors">Crie ou selecione uma pasta/planilha para conseguir adicionar um novo contrato.</p>
+        {% endif %}
+
+        <div id="addContractWrapper" class="add-form{% if form.errors %} active{% endif %}">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="form-errors">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="form-grid">
+                    {% if show_board_field %}
+                        <div class="form-group">
+                            <label for="{{ form.board.id_for_label }}">Pasta</label>
+                            {{ form.board }}
+                            {{ form.board.errors }}
+                        </div>
+                    {% else %}
+                        <div style="display:none;">
+                            {{ form.board }}
+                        </div>
+                        {{ form.board.errors }}
+                    {% endif %}
+
+                    {% if show_sheet_field %}
+                        <div class="form-group">
+                            <label for="{{ form.sheet.id_for_label }}">Planilha</label>
+                            {{ form.sheet }}
+                            {{ form.sheet.errors }}
+                        </div>
+                    {% else %}
+                        <div style="display:none;">
+                            {{ form.sheet }}
+                        </div>
+                        {{ form.sheet.errors }}
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="{{ form.elemento.id_for_label }}">Elemento</label>
+                        {{ form.elemento }}
+                        {{ form.elemento.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.empresa.id_for_label }}">Empresa</label>
+                        {{ form.empresa }}
+                        {{ form.empresa.errors }}
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="{{ form.objeto.id_for_label }}">Objeto</label>
+                        {{ form.objeto }}
+                        {{ form.objeto.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.qtd_total_itens.id_for_label }}">Qtd. total itens</label>
+                        {{ form.qtd_total_itens }}
+                        {{ form.qtd_total_itens.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.valor_total_anterior.id_for_label }}">Valor total anterior</label>
+                        {{ form.valor_total_anterior }}
+                        {{ form.valor_total_anterior.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.valor_total_reajustado.id_for_label }}">Valor total reajustado</label>
+                        {{ form.valor_total_reajustado }}
+                        {{ form.valor_total_reajustado.errors }}
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelAddContract">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="contracts-table">
+                <thead>
+                    <tr>
+                        <th>Elemento</th>
+                        <th>Empresa</th>
+                        <th>Objeto</th>
+                        <th>Qtd. total itens</th>
+                        <th>Valor total anterior</th>
+                        <th>Valor total reajustado</th>
+                        <th width="220">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contrato in contratos %}
+                        <tr data-contrato-id="{{ contrato.id }}">
+                            <td class="editable-wrapper" contenteditable="true" data-field="elemento" data-type="text" data-value="{{ contrato.elemento|default_if_none:'' }}">{{ contrato.elemento|default:'-' }}</td>
+                            <td class="editable-wrapper" contenteditable="true" data-field="empresa" data-type="text" data-value="{{ contrato.empresa|default_if_none:'' }}">{{ contrato.empresa|default:'-' }}</td>
+                            <td class="editable-wrapper" contenteditable="true" data-field="objeto" data-type="text" data-value="{{ contrato.objeto|default_if_none:'' }}">{{ contrato.objeto|default:'-' }}</td>
+                            <td class="editable-wrapper" contenteditable="true" data-field="qtd_total_itens" data-type="integer" data-value="{{ contrato.qtd_total_itens|default_if_none:0 }}">{{ contrato.qtd_total_itens|default:'-' }}</td>
+                            <td class="editable-wrapper" contenteditable="true" data-field="valor_total_anterior" data-type="currency" data-value="{{ contrato.valor_total_anterior|default_if_none:0 }}">R$ {{ contrato.valor_total_anterior|default_if_none:0|floatformat:2 }}</td>
+                            <td class="editable-wrapper" contenteditable="true" data-field="valor_total_reajustado" data-type="currency" data-value="{{ contrato.valor_total_reajustado|default_if_none:0 }}">R$ {{ contrato.valor_total_reajustado|default_if_none:0|floatformat:2 }}</td>
+                            <td class="contracts-actions">
+                                <button type="button" class="btn-secondary" title="Adicionar sublinha" disabled>Adicionar sublinha</button>
+                                <button type="button" class="btn-secondary" title="Excluir" disabled>Excluir</button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Nenhum contrato encontrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+    import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
+
+    const API_BASE = '/api/v1/contratos/';
+
+    const formatCurrency = (value) => {
+        const numeric = Number(value);
+        if (Number.isNaN(numeric)) {
+            return 'R$ 0,00';
+        }
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2,
+        }).format(numeric);
+    };
+
+    const formatDisplay = (value, type) => {
+        if (value === null || value === undefined || value === '') {
+            return '-';
+        }
+        if (type === 'currency') {
+            return formatCurrency(value);
+        }
+        return String(value);
+    };
+
+    const parseValue = (text, type) => {
+        const trimmed = text.trim();
+        if (!trimmed) {
+            return '';
+        }
+        if (type === 'integer') {
+            const cleaned = trimmed.replace(/[^0-9-]/g, '');
+            const intVal = parseInt(cleaned, 10);
+            if (Number.isNaN(intVal)) {
+                throw new Error('Valor invalido');
+            }
+            return intVal;
+        }
+        if (type === 'currency') {
+            const sanitized = trimmed.replace(/[^0-9,.-]/g, '');
+            const withoutThousands = sanitized.replace(/\.(?=\d{3}(\D|$))/g, '');
+            const normalized = withoutThousands.replace(/,/g, '.');
+            const floatVal = parseFloat(normalized);
+            if (Number.isNaN(floatVal)) {
+                throw new Error('Valor invalido');
+            }
+            return floatVal;
+        }
+        return trimmed;
+    };
+
+    const normalizeValueForDataset = (value, type) => {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        if (type === 'integer') {
+            const numeric = Number(value);
+            return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
+        }
+        if (type === 'currency') {
+            const numeric = Number(value);
+            return Number.isNaN(numeric) ? '' : String(numeric);
+        }
+        return String(value);
+    };
+
+    const normalizeForComparison = (value, type) => {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        if (type === 'integer') {
+            const numeric = Number(value);
+            return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
+        }
+        if (type === 'currency') {
+            const numeric = Number(value);
+            return Number.isNaN(numeric) ? '' : numeric.toFixed(2);
+        }
+        return String(value).trim();
+    };
+
+    const applyValueToCell = (cell, value) => {
+        const type = cell.dataset.type;
+        const normalized = normalizeValueForDataset(value, type);
+        cell.dataset.value = normalized;
+
+        let displayValue = '';
+        if (normalized !== '') {
+            if (type === 'integer') {
+                displayValue = Number(parseInt(normalized, 10));
+            } else if (type === 'currency') {
+                displayValue = Number(parseFloat(normalized));
+            } else {
+                displayValue = normalized;
+            }
+        }
+
+        const rendered = formatDisplay(displayValue, type);
+        cell.textContent = rendered === '' ? '-' : rendered;
+    };
+
+    const showError = (cell, message) => {
+        cell.classList.add('cell-error');
+        cell.setAttribute('title', message);
+        setTimeout(() => {
+            cell.classList.remove('cell-error');
+            cell.removeAttribute('title');
+            applyValueToCell(cell, cell.dataset.value);
+        }, 2000);
+    };
+
+    const updateContratoField = async (cell, contratoId, field, value) => {
+        cell.classList.add('cell-saving');
+        try {
+            const headers = await getAuthHeaders();
+            headers['Content-Type'] = 'application/json';
+
+            const response = await fetch(`${API_BASE}${contratoId}/`, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify({ [field]: value })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro ao salvar (status ${response.status})`);
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                data = {};
+            }
+            const updatedValue = Object.prototype.hasOwnProperty.call(data, field) ? data[field] : value;
+            applyValueToCell(cell, updatedValue);
+        } catch (error) {
+            showError(cell, error.message || 'Erro ao salvar');
+        } finally {
+            cell.classList.remove('cell-saving');
+        }
+    };
+
+    const setupEditableCells = () => {
+        document.querySelectorAll('.editable-wrapper[data-field]').forEach((cell) => {
+            cell.addEventListener('focus', () => {
+                cell.dataset.originalValue = cell.dataset.value ?? '';
+                if ((cell.dataset.value ?? '') === '' && cell.textContent.trim() === '-') {
+                    cell.textContent = '';
+                }
+            });
+
+            cell.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    cell.blur();
+                }
+            });
+
+            cell.addEventListener('blur', async () => {
+                const contratoId = cell.closest('tr')?.dataset?.contratoId;
+                const field = cell.dataset.field;
+                const type = cell.dataset.type;
+                if (!contratoId || !field) {
+                    return;
+                }
+
+                try {
+                    if (type !== 'text' && cell.textContent.trim() === '') {
+                        applyValueToCell(cell, cell.dataset.value);
+                        return;
+                    }
+                    const parsedValue = parseValue(cell.textContent, type);
+                    const normalized = parsedValue === '' ? '' : parsedValue;
+                    const originalNormalized = normalizeForComparison(cell.dataset.originalValue ?? '', type);
+                    const currentNormalized = normalizeForComparison(normalized, type);
+                    if (currentNormalized === originalNormalized) {
+                        applyValueToCell(cell, cell.dataset.value);
+                        return;
+                    }
+                    await updateContratoField(cell, contratoId, field, normalized);
+                } catch (error) {
+                    showError(cell, error.message || 'Valor invalido');
+                }
+            });
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('toggleAddContract');
+        const wrapper = document.getElementById('addContractWrapper');
+        const cancelBtn = document.getElementById('cancelAddContract');
+
+        if (toggleBtn && wrapper) {
+            const updateAria = () => {
+                const expanded = wrapper.classList.contains('active');
+                toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            };
+
+            if (wrapper.classList.contains('active')) {
+                updateAria();
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                if (toggleBtn.disabled) {
+                    return;
+                }
+                wrapper.classList.toggle('active');
+                updateAria();
+            });
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    wrapper.classList.remove('active');
+                    updateAria();
+                });
+            }
+        }
+
+        setupEditableCells();
+    });
+</script>
+{% endblock %}

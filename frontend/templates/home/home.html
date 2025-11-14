@@ -17,6 +17,53 @@
         }
         .board-breadcrumb a { color: #333781; text-decoration: none; }
         .board-breadcrumb a:hover { text-decoration: underline; }
+
+        .editable-wrapper {
+            display: block;
+            width: 100%;
+            min-height: 20px;
+            padding: 4px 6px;
+            cursor: text;
+            background-color:rgba(244, 244, 244, 0.7);
+            border-radius: 4px;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+        }
+
+        .editable-wrapper:focus {
+            background-color: #e8e8e8;
+            box-shadow: 0 0 0 2px rgba(51, 55, 129, 0.2);
+        }
+
+        .editable-wrapper.cell-saving {
+            background-color: rgba(51, 55, 129, 0.2);
+        }
+
+        .editable-wrapper.cell-error {
+            background-color: rgba(220, 53, 69, 0.25);
+        }
+
+        .editable-wrapper[data-readonly="true"] {
+            cursor: default;
+            background-color: rgba(243, 244, 246, 0.8);
+            color: #555;
+        }
+
+        .editable-wrapper[data-readonly="true"]:focus {
+            box-shadow: none;
+        }
+
+        .editable-wrapper.company-tag {
+            background-color: rgba(51, 55, 129, 0.08);
+            color: #302754;
+            border: 1px solid rgba(51, 55, 129, 0.15);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .editable-wrapper.company-tag:focus {
+            background-color: rgba(51, 55, 129, 0.15);
+        }
     </style>
 {% endblock %}
 
@@ -142,10 +189,29 @@
                             </button>
                         </td>
                         <td class="element-col">
-                            <span class="element-number">{{ contract.id }}</span>
+                            <span
+                                class="editable-wrapper element-number"
+                                contenteditable="true"
+                                spellcheck="false"
+                                data-entity="contract"
+                                data-record-id="{{ contract.id }}"
+                                data-field="elemento"
+                                data-type="text"
+                                data-value="{{ contract.elemento|default_if_none:''|escape }}"
+                                data-placeholder="Contrato #{{ contract.id }}"
+                            >{{ contract.elemento|default:'-' }}</span>
                         </td>
                         <td class="company-col">
-                            <span class="company-tag">{{ contract.empresa|default:'-' }}</span>
+                            <span
+                                class="editable-wrapper company-tag"
+                                contenteditable="true"
+                                spellcheck="false"
+                                data-entity="contract"
+                                data-record-id="{{ contract.id }}"
+                                data-field="empresa"
+                                data-type="text"
+                                data-value="{{ contract.empresa|default_if_none:''|escape }}"
+                            >{{ contract.empresa|default:'-' }}</span>
                         </td>
                         <td class="status-col">
                             <select class="status-dropdown" data-contract-id="{{ contract.id }}" 
@@ -157,16 +223,52 @@
                             </select>
                         </td>
                         <td class="object-col">
-                            <span class="object-text">{{ contract.objeto|default:'-' }}</span>
+                            <span
+                                class="editable-wrapper object-text"
+                                contenteditable="true"
+                                spellcheck="false"
+                                data-entity="contract"
+                                data-record-id="{{ contract.id }}"
+                                data-field="objeto"
+                                data-type="text"
+                                data-value="{{ contract.objeto|default_if_none:''|escape }}"
+                            >{{ contract.objeto|default:'-' }}</span>
                         </td>
                         <td class="qty-col">
-                            <span class="qty-value">{{ contract.qtd_total_itens|default:0 }}</span>
+                            <span
+                                class="editable-wrapper qty-value"
+                                contenteditable="true"
+                                spellcheck="false"
+                                data-entity="contract"
+                                data-record-id="{{ contract.id }}"
+                                data-field="qtd_total_itens"
+                                data-type="integer"
+                                data-value="{{ contract.qtd_total_itens|default_if_none:0 }}"
+                            >{{ contract.qtd_total_itens|default_if_none:0 }}</span>
                         </td>
                         <td class="value-prev-col">
-                            <span class="value-amount">R$ {{ contract.valor_total_anterior|default:0|floatformat:2 }}</span>
+                            <span
+                                class="editable-wrapper value-amount"
+                                contenteditable="true"
+                                spellcheck="false"
+                                data-entity="contract"
+                                data-record-id="{{ contract.id }}"
+                                data-field="valor_total_anterior"
+                                data-type="currency"
+                                data-value="{{ contract.valor_total_anterior|default_if_none:0 }}"
+                            >{{ contract.valor_total_anterior|default_if_none:0 }}</span>
                         </td>
                         <td class="value-adj-col">
-                            <span class="value-amount">R$ {{ contract.valor_total_reajustado|default:0|floatformat:2 }}</span>
+                            <span
+                                class="editable-wrapper value-amount"
+                                contenteditable="true"
+                                spellcheck="false"
+                                data-entity="contract"
+                                data-record-id="{{ contract.id }}"
+                                data-field="valor_total_reajustado"
+                                data-type="currency"
+                                data-value="{{ contract.valor_total_reajustado|default_if_none:0 }}"
+                            >{{ contract.valor_total_reajustado|default_if_none:0 }}</span>
                         </td>
                         <td class="actions-col">
                             <button class="btn-icon add-subelement-btn" data-contract-id="{{ contract.id }}" title="Adicionar subelemento" style="background: #ffc107; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;">
@@ -576,6 +678,357 @@
             }).format(numeric);
         };
 
+        const formatPercentage = (value) => {
+            const numeric = Number(value);
+            if (Number.isNaN(numeric)) return '0,00%';
+            return `${numeric.toFixed(2).replace('.', ',')}%`;
+        };
+
+        const escapeHtml = (value) => {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        const escapeAttribute = (value) => escapeHtml(value).replace(/\n/g, '&#10;');
+
+        const formatDisplay = (value, type) => {
+            if (value === null || value === undefined || value === '') {
+                return '-';
+            }
+            if (type === 'currency') {
+                return formatCurrency(value);
+            }
+            if (type === 'integer') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '0' : String(Math.trunc(numeric));
+            }
+            if (type === 'percent') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '0,00%' : formatPercentage(numeric);
+            }
+            return String(value);
+        };
+
+        const parseValue = (text, type) => {
+            const trimmed = text.trim();
+            if (!trimmed) {
+                return '';
+            }
+            if (type === 'integer') {
+                const cleaned = trimmed.replace(/[^0-9-]/g, '');
+                const intVal = parseInt(cleaned, 10);
+                if (Number.isNaN(intVal)) {
+                    throw new Error('Valor inválido');
+                }
+                return intVal;
+            }
+            if (type === 'currency') {
+                const sanitized = trimmed.replace(/[^0-9,.-]/g, '');
+                const withoutThousands = sanitized.replace(/\.(?=\d{3}(\D|$))/g, '');
+                const normalized = withoutThousands.replace(/,/g, '.');
+                const floatVal = parseFloat(normalized);
+                if (Number.isNaN(floatVal)) {
+                    throw new Error('Valor inválido');
+                }
+                return floatVal;
+            }
+            if (type === 'percent') {
+                const sanitized = trimmed.replace(/[^0-9,.-]/g, '');
+                const normalized = sanitized.replace(/,/g, '.');
+                const floatVal = parseFloat(normalized);
+                if (Number.isNaN(floatVal)) {
+                    throw new Error('Percentual inválido');
+                }
+                return floatVal;
+            }
+            return trimmed;
+        };
+
+        const normalizeValueForDataset = (value, type) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            if (type === 'integer') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
+            }
+            if (type === 'currency' || type === 'percent') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : String(numeric);
+            }
+            return String(value).trim();
+        };
+
+        const normalizeForComparison = (value, type) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            if (type === 'integer') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
+            }
+            if (type === 'currency' || type === 'percent') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : numeric.toFixed(2);
+            }
+            return String(value).trim();
+        };
+
+        const setCellValue = (cell, rawValue) => {
+            const type = cell.dataset.type || 'text';
+            const normalized = normalizeValueForDataset(rawValue, type);
+            cell.dataset.value = normalized;
+            const placeholder = cell.dataset.placeholder;
+            const display = normalized === ''
+                ? (placeholder || '-')
+                : formatDisplay(normalized, type);
+            cell.textContent = display;
+        };
+
+        const showCellError = (cell, message) => {
+            cell.classList.add('cell-error');
+            if (message) {
+                cell.setAttribute('title', message);
+            }
+            setTimeout(() => {
+                cell.classList.remove('cell-error');
+                if (message) {
+                    cell.removeAttribute('title');
+                }
+                setCellValue(cell, cell.dataset.value);
+            }, 2000);
+        };
+
+        const applyPayloadToCells = (rowElement, data) => {
+            if (!rowElement || !data) return;
+            rowElement.querySelectorAll('.editable-wrapper[data-field]').forEach((cell) => {
+                const field = cell.dataset.field;
+                if (!field) return;
+                if (Object.prototype.hasOwnProperty.call(data, field)) {
+                    setCellValue(cell, data[field]);
+                }
+            });
+        };
+
+        const updateTotals = () => {
+            const rows = Array.from(document.querySelectorAll('.contract-row'));
+            const totalCountEl = document.querySelector('.total-count');
+            if (totalCountEl) {
+                totalCountEl.textContent = rows.filter((row) => row.style.display !== 'none').length;
+            }
+
+            let qtySum = 0;
+            let valueSum = 0;
+
+            rows.forEach((row) => {
+                if (row.style.display === 'none') return;
+                const qtyCell = row.querySelector('.qty-col .editable-wrapper');
+                const valueCell = row.querySelector('.value-adj-col .editable-wrapper');
+                if (qtyCell) {
+                    qtySum += Number(qtyCell.dataset.value || 0);
+                }
+                if (valueCell) {
+                    valueSum += Number(valueCell.dataset.value || 0);
+                }
+            });
+
+            const qtyEl = document.querySelector('.total-qty');
+            if (qtyEl) {
+                qtyEl.textContent = qtySum;
+            }
+
+            const valueEl = document.querySelector('.total-value');
+            if (valueEl) {
+                valueEl.textContent = formatCurrency(valueSum);
+            }
+        };
+
+        const updateContratoField = async (cell, contratoId, field, value) => {
+            cell.classList.add('cell-saving');
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${API_CONTRATOS}${contratoId}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ [field]: value })
+                });
+
+                if (!response.ok) {
+                    let detail = `Erro ao salvar (status ${response.status})`;
+                    try {
+                        const errorData = await response.json();
+                        detail = errorData.detail || detail;
+                    } catch (jsonErr) {
+                        /* ignore */
+                    }
+                    throw new Error(detail);
+                }
+
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    data = {};
+                }
+
+                const row = document.querySelector(`tr[data-contract-id="${contratoId}"]`);
+                if (row && data && Object.keys(data).length > 0) {
+                    applyPayloadToCells(row, data);
+                } else {
+                    setCellValue(cell, value);
+                }
+
+                updateTotals();
+            } catch (error) {
+                throw error;
+            } finally {
+                cell.classList.remove('cell-saving');
+            }
+        };
+
+        const updateSubelementField = async (cell, subelementId, field, value) => {
+            cell.classList.add('cell-saving');
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${API_SUBELEMENTS}${subelementId}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ [field]: value })
+                });
+
+                if (!response.ok) {
+                    let detail = `Erro ao salvar (status ${response.status})`;
+                    try {
+                        const errorData = await response.json();
+                        detail = errorData.detail || detail;
+                    } catch (jsonErr) {
+                        /* ignore */
+                    }
+                    throw new Error(detail);
+                }
+
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    data = {};
+                }
+
+                const row = document.querySelector(`tr[data-subelement-id="${subelementId}"]`);
+                if (row && data && Object.keys(data).length > 0) {
+                    applyPayloadToCells(row, data);
+                } else {
+                    setCellValue(cell, value);
+                    if (row) {
+                        const quantidadeCell = row.querySelector('[data-field="quantidade"]');
+                        const valorUnitCell = row.querySelector('[data-field="valor_unitario_anterior"]');
+                        const ipcaCell = row.querySelector('[data-field="valor_ipca"]');
+                        const valorTotalCell = row.querySelector('[data-field="valor_total"]');
+                        const valorUnitReajCell = row.querySelector('[data-field="valor_unitario_reajustado"]');
+                        const valorTotalReajCell = row.querySelector('[data-field="valor_total_reajustado"]');
+
+                        if (quantidadeCell && valorUnitCell && ipcaCell) {
+                            const quantidadeAtual = Number(quantidadeCell.dataset.value || 0);
+                            const valorUnitAtual = Number(valorUnitCell.dataset.value || 0);
+                            const ipcaAtual = Number(ipcaCell.dataset.value || 0);
+
+                            const valorTotal = quantidadeAtual * valorUnitAtual;
+                            const valorUnitReajustado = valorUnitAtual + (valorUnitAtual * (ipcaAtual / 100));
+                            const valorTotalReajustado = quantidadeAtual * valorUnitReajustado;
+
+                            if (valorTotalCell) setCellValue(valorTotalCell, valorTotal);
+                            if (valorUnitReajCell) setCellValue(valorUnitReajCell, valorUnitReajustado);
+                            if (valorTotalReajCell) setCellValue(valorTotalReajCell, valorTotalReajustado);
+                        }
+                    }
+                }
+
+            } catch (error) {
+                throw error;
+            } finally {
+                cell.classList.remove('cell-saving');
+            }
+        };
+
+        const setupEditableCells = (root = document) => {
+            const cells = root.querySelectorAll('.editable-wrapper[data-field]');
+            cells.forEach((cell) => {
+                const type = cell.dataset.type || 'text';
+                const currentValue = cell.dataset.value ?? '';
+                setCellValue(cell, currentValue);
+
+                if (cell.dataset.bound === 'true') {
+                    return;
+                }
+
+                cell.dataset.bound = 'true';
+
+                if (cell.dataset.readonly === 'true') {
+                    cell.setAttribute('contenteditable', 'false');
+                    return;
+                }
+
+                cell.addEventListener('focus', () => {
+                    cell.dataset.originalValue = cell.dataset.value ?? '';
+                    if ((cell.dataset.value ?? '') === '' && cell.textContent.trim() === '-') {
+                        cell.textContent = '';
+                    }
+                });
+
+                cell.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        cell.blur();
+                    }
+                });
+
+                cell.addEventListener('blur', async () => {
+                    const entity = cell.dataset.entity;
+                    const recordId = cell.dataset.recordId;
+                    const field = cell.dataset.field;
+                    const valueType = cell.dataset.type || 'text';
+
+                    if (!entity || !recordId || !field) {
+                        setCellValue(cell, cell.dataset.value);
+                        return;
+                    }
+
+                    if (valueType !== 'text' && cell.textContent.trim() === '') {
+                        setCellValue(cell, cell.dataset.value);
+                        return;
+                    }
+
+                    try {
+                        const parsedValue = parseValue(cell.textContent, valueType);
+                        const normalizedNew = normalizeForComparison(parsedValue, valueType);
+                        const normalizedOld = normalizeForComparison(cell.dataset.originalValue ?? '', valueType);
+
+                        if (normalizedNew === normalizedOld) {
+                            setCellValue(cell, cell.dataset.value);
+                            return;
+                        }
+
+                        if (entity === 'contract') {
+                            await updateContratoField(cell, recordId, field, parsedValue);
+                        } else if (entity === 'subelement') {
+                            await updateSubelementField(cell, recordId, field, parsedValue);
+                        }
+                    } catch (error) {
+                        showCellError(cell, error.message || 'Valor inválido');
+                    }
+                });
+            });
+        };
+
         // Carregar subelementos
         const loadSubelements = async (contractId) => {
             const tbody = document.querySelector(`.subelements-body[data-contract-id="${contractId}"]`);
@@ -594,24 +1047,52 @@
                     return;
                 }
 
-                tbody.innerHTML = subelements.map(sub => `
-                    <tr data-subelement-id="${sub.id}" style="border-bottom: 1px solid #e9ecef;">
-                        <td style="padding: 12px;">${sub.nome || '-'}</td>
-                        <td style="padding: 12px;">${sub.quantidade || 0}</td>
-                        <td style="padding: 12px;">${formatCurrency(sub.valor_unitario_anterior || 0)}</td>
-                        <td style="padding: 12px; font-weight: 600;">${formatCurrency(sub.valor_total || 0)}</td>
-                        <td style="padding: 12px;">${sub.valor_ipca || 0}%</td>
-                        <td style="padding: 12px; color: #28a745; font-weight: 600;">${formatCurrency(sub.valor_unitario_reajustado || 0)}</td>
-                        <td style="padding: 12px; color: #28a745; font-weight: 600;">${formatCurrency(sub.valor_total_reajustado || 0)}</td>
-                        <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${sub.comentario || '-'}</td>
-                        <td style="padding: 12px; text-align: center;">
-                            <button class="delete-subelement-btn" data-subelement-id="${sub.id}" title="Excluir" style="background: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = subelements.map((sub) => {
+                    const nome = sub.nome ?? '';
+                    const quantidade = sub.quantidade ?? 0;
+                    const valorUnitAnter = sub.valor_unitario_anterior ?? 0;
+                    const valorTotal = sub.valor_total ?? 0;
+                    const valorIpca = sub.valor_ipca ?? 0;
+                    const valorUnitReaj = sub.valor_unitario_reajustado ?? 0;
+                    const valorTotalReaj = sub.valor_total_reajustado ?? 0;
+                    const comentario = sub.comentario ?? '';
 
+                    return `
+                        <tr data-subelement-id="${sub.id}" data-contract-id="${contractId}" style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;">
+                                <span class="editable-wrapper" contenteditable="true" spellcheck="false" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="nome" data-type="text" data-value="${escapeAttribute(nome)}">${escapeHtml(nome) || '-'}</span>
+                            </td>
+                            <td style="padding: 12px;">
+                                <span class="editable-wrapper" contenteditable="true" spellcheck="false" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="quantidade" data-type="integer" data-value="${quantidade}">${quantidade}</span>
+                            </td>
+                            <td style="padding: 12px;">
+                                <span class="editable-wrapper" contenteditable="true" spellcheck="false" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="valor_unitario_anterior" data-type="currency" data-value="${valorUnitAnter}">${formatCurrency(valorUnitAnter)}</span>
+                            </td>
+                            <td style="padding: 12px; font-weight: 600;">
+                                <span class="editable-wrapper" contenteditable="false" data-readonly="true" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="valor_total" data-type="currency" data-value="${valorTotal}">${formatCurrency(valorTotal)}</span>
+                            </td>
+                            <td style="padding: 12px;">
+                                <span class="editable-wrapper" contenteditable="true" spellcheck="false" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="valor_ipca" data-type="percent" data-value="${valorIpca}">${formatPercentage(valorIpca)}</span>
+                            </td>
+                            <td style="padding: 12px; color: #28a745; font-weight: 600;">
+                                <span class="editable-wrapper" contenteditable="false" data-readonly="true" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="valor_unitario_reajustado" data-type="currency" data-value="${valorUnitReaj}">${formatCurrency(valorUnitReaj)}</span>
+                            </td>
+                            <td style="padding: 12px; color: #28a745; font-weight: 600;">
+                                <span class="editable-wrapper" contenteditable="false" data-readonly="true" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="valor_total_reajustado" data-type="currency" data-value="${valorTotalReaj}">${formatCurrency(valorTotalReaj)}</span>
+                            </td>
+                            <td style="padding: 12px; max-width: 200px;">
+                                <span class="editable-wrapper" contenteditable="true" data-entity="subelement" data-record-id="${sub.id}" data-parent-id="${contractId}" data-field="comentario" data-type="text" data-value="${escapeAttribute(comentario)}">${escapeHtml(comentario) || '-'}</span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button class="delete-subelement-btn" data-subelement-id="${sub.id}" title="Excluir" style="background: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                setupEditableCells(tbody);
                 setupDeleteSubelementButtons();
             } catch (error) {
                 tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 30px; color: #dc3545;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>Erro: ${error.message}</td></tr>`;
@@ -1000,6 +1481,8 @@
                     }
                 }
             });
+
+            updateTotals();
         };
 
         // Carregar empresas únicas no dropdown
@@ -1128,9 +1611,11 @@
                         const statusDropdown = row.querySelector('.status-dropdown');
                         const status = statusDropdown?.options[statusDropdown.selectedIndex]?.text.trim() || '';
                         const objeto = row.querySelector('.object-text')?.textContent.trim() || '';
-                        const qtd = row.querySelector('.qty-value')?.textContent.trim() || '0';
-                        const valorAnt = row.querySelector('.value-prev-col .value-amount')?.textContent.trim().replace('R$ ', '') || '0';
-                        const valorReaj = row.querySelector('.value-adj-col .value-amount')?.textContent.trim().replace('R$ ', '') || '0';
+                        const qtd = row.querySelector('.qty-value')?.dataset.value || '0';
+                        const valorAntCell = row.querySelector('.value-prev-col .value-amount');
+                        const valorReajCell = row.querySelector('.value-adj-col .value-amount');
+                        const valorAnt = valorAntCell?.dataset.value || '0';
+                        const valorReaj = valorReajCell?.dataset.value || '0';
                         
                         csv += `"${elemento}","${empresa}","${status}","${objeto}","${qtd}","${valorAnt}","${valorReaj}"\n`;
                     }
@@ -1220,5 +1705,8 @@
                 alert(`❌ Erro: ${error.message}`);
             }
         });
+
+        setupEditableCells(document);
+        updateTotals();
     </script>
 {% endblock %}

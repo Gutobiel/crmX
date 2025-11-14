@@ -25,6 +25,22 @@
         }
         .board-breadcrumb a { color: #333781; text-decoration: none; }
         .board-breadcrumb a:hover { text-decoration: underline; }
+        .workspaces-list {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .workspaces-list .workspace-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .workspaces-list .workspace-item span {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -50,7 +66,7 @@
                 <div class="dropdown-content">
                         <a href="{% url 'workspace' %}" class="workspace-link">
                             <i class="fas fa-briefcase"></i>
-                            <span>{% if active_workspace %}{{ active_workspace.name }}{% else %}Áreas de trabalho{% endif %}</span>
+                            <span>{% if active_workspace %}{{ active_workspace.nome }}{% else %}Áreas de trabalho{% endif %}</span>
                         </a>
                     </div>
                 <div class="dropdown-actions">
@@ -68,7 +84,7 @@
                     {% for workspace in user_workspaces %}
                     <a href="{% url 'workspace_detail' workspace.id %}" class="workspace-item {% if workspace == active_workspace %}active{% endif %}">
                         <i class="fas fa-briefcase"></i>
-                        <span>{{ workspace.name }}</span>
+                        <span>{{ workspace.nome }}</span>
                         {% if workspace.shared %}
                         <i class="fas fa-users" title="Compartilhado"></i>
                         {% endif %}

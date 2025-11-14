@@ -51,7 +51,13 @@ def login_view(request):
 
 @jwt_required
 def home(request):
-    return render(request, 'home/home.html')
+    # Carregar todos os contratos para a página home
+    contratos = ContratosElement.objects.all().order_by('id')
+    
+    context = {
+        'contracts': contratos,
+    }
+    return render(request, 'home/home.html', context)
 
 
 

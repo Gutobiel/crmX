@@ -13,6 +13,35 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Breadcrumb estilo padrão reutilizável */
+        .board-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .board-breadcrumb a { color: #333781; text-decoration: none; }
+        .board-breadcrumb a:hover { text-decoration: underline; }
+        .workspaces-list {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .workspaces-list .workspace-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .workspaces-list .workspace-item span {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 </head>
 <body>
     <!-- Overlay Mobile -->
@@ -56,6 +85,9 @@
                     <a href="{% url 'workspace_detail' workspace.id %}" class="workspace-item {% if workspace == active_workspace %}active{% endif %}">
                         <i class="fas fa-briefcase"></i>
                         <span>{{ workspace.nome }}</span>
+                        {% if workspace.shared %}
+                        <i class="fas fa-users" title="Compartilhado"></i>
+                        {% endif %}
                     </a>
                     {% endfor %}
                 {% else %}
@@ -174,10 +206,31 @@
             const workspaceItems = document.querySelectorAll('.workspace-item');
             workspaceItems.forEach(item => {
                 item.addEventListener('click', function(e) {
-                    // The href will navigate to workspace_detail which saves the workspace in session
-                    // No need to prevent default - let the navigation happen
+                    // Remove active class from all items
+                    workspaceItems.forEach(wi => wi.classList.remove('active'));
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Update the workspace name in the header
+                    const workspaceName = this.querySelector('span').textContent;
+                    const workspaceHeader = document.querySelector('.dropdown-content span');
+                    workspaceHeader.textContent = workspaceName;
+                    
+                    // Hide the workspace list
+                    workspacesList.style.display = 'none';
+                    expandBtn.querySelector('i').style.transform = '';
+
+                    // Store the active workspace in localStorage
+                    localStorage.setItem('activeWorkspace', workspaceName);
                 });
             });
+
+            // Restore active workspace from localStorage if available
+            const savedWorkspace = localStorage.getItem('activeWorkspace');
+            if (savedWorkspace) {
+                const workspaceHeader = document.querySelector('.dropdown-content span');
+                workspaceHeader.textContent = savedWorkspace;
+            }
         });
     </script>
 
@@ -209,6 +262,7 @@
 
         <!-- Área de Conteúdo -->
         <div class="content-area">
+            {% block breadcrumb %}{% endblock %}
             {% block content %}
             <!-- O conteúdo específico de cada página será injetado aqui -->
             {% endblock %}

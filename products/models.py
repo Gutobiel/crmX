@@ -4,7 +4,6 @@ from mixins.models import TimestampMixin
 class Product(TimestampMixin, models.Model):
     nome = models.CharField(
         max_length=100,
-        unique=True,
         verbose_name='Nome'
     )
     descricao = models.TextField(
@@ -15,7 +14,9 @@ class Product(TimestampMixin, models.Model):
     valor_unitario = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        verbose_name='Valor Unitário'
+        verbose_name='Valor Unitário',
+        blank=True,
+        null=True,
     )
 
     class Meta:

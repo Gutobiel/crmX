@@ -5,10 +5,48 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/board.css' %}">
+    <style>
+        /* Breadcrumb - mesmo estilo do board/detail */
+        .board-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .board-breadcrumb a {
+            color: #333781;
+            text-decoration: none;
+        }
+
+        .board-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+    </style>
 {% endblock %}
 
 {% block page_title %}
     Pasta de Trabalho
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="board-breadcrumb">
+        <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+        {% if selected_workspace_id %}
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'workspace_detail' selected_workspace_id %}">
+                {% for ws in workspaces %}
+                    {% if ws.id|stringformat:"s" == selected_workspace_id %}
+                        {{ ws.nome }}
+                    {% endif %}
+                {% endfor %}
+            </a>
+        {% endif %}
+        <i class="fas fa-chevron-right"></i>
+        <span>Nova Pasta</span>
+    </div>
 {% endblock %}
 
 {% block content %}
@@ -24,7 +62,7 @@
             <label for="workspace-select">Área de Trabalho *</label>
             <select id="workspace-select" name="workspace" class="form-input" required>
                 {% for ws in workspaces %}
-                    <option value="{{ ws.id }}">{{ ws.nome }}</option>
+                    <option value="{{ ws.id }}" {% if selected_workspace_id and ws.id|stringformat:"s" == selected_workspace_id %}selected{% endif %}>{{ ws.nome }}</option>
                 {% endfor %}
             </select>
             <div class="form-help">Escolha a área de trabalho onde a nova pasta será criada.</div>
@@ -144,7 +182,7 @@
 
                 const board = await response.json();
                 
-                window.location.href = `/workspace/${workspaceId}/`;
+                window.location.href = `/workspace/${workspaceId}/boards/`;
 
             } catch (error) {
                 console.error('Erro ao criar board:', error);

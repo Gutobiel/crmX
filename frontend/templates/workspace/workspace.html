@@ -11,7 +11,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ workspace.nome }} - Área de Trabalho{% endblock %}
+{% block title %}Áreas de Trabalho{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
@@ -47,6 +47,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             border: 1px solid #e1e5e9;
+            position: relative; /* permite posicionar botão de exclusão */
         }
 
         .workspace-card:hover {
@@ -124,12 +125,22 @@
             background: #333781;
             color: white;
         }
+        .toolbar { display:flex; justify-content:space-between; align-items:center; }
+        .toolbar-right { display:flex; gap:10px; }
+    .btn-action.btn-audit { background:#f4f5f7; color:#333; border:1px solid #e1e5e9; padding:8px 14px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+        .btn-action.btn-audit.active { background:#333781; color:#fff; }
+        .workspace-header-actions { display:flex; gap:8px; align-items:center; }
+    .btn-delete { background:#fff; border:1px solid #e1e5e9; color:#c62828; padding:6px 10px; border-radius:6px; cursor:pointer; display:none; align-items:center; gap:4px; transition:.2s; position:absolute; bottom:12px; right:12px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+    .audit-on .btn-delete { display:flex; }
+    .workspace-card.audit-on { padding-bottom:60px; } /* espaço extra para botão não sobrepor conteúdo */
+        .btn-delete:hover { background:#ffecec; }
+        .audit-hint { font-size:12px; color:#c62828; margin-top:4px; display:none; }
     </style>
 {% endblock %}
 
 {% block page_title %}
-    <div class="editable-wrapper" contenteditable="true" id="workspaceTitle">
-        {% if workspace.nome %}{{ workspace.nome }}{% else %}Nova Área de Trabalho{% endif %}
+    <div class="" id="workspaceTitle">
+        Áreas de Trabalho
     </div>
 {% endblock %}
 
@@ -146,9 +157,9 @@
                     <i class="fas fa-download"></i>
                     Exportar
                 </button>
-                <a href="" class="btn-primary" id="newWorkspaceBtn" title="Nova Área de Trabalho">
+                <a href="{% url 'new_workspace' %}" class="btn-primary" id="newWorkspaceBtn" title="Nova Área de Trabalho">
                         <i class="fas fa-plus"></i>
-                        Adicionar membro
+                        Nova Área de Trabalho
                     </a>
             </div>
         </div>
@@ -159,7 +170,7 @@
         <div class="toolbar-left">
             <button class="btn-filter active" data-filter="my-folders">
                 <i class="fas fa-folder"></i>
-                Minhas Pastas
+                Minhas áreas de trabalho
             </button>
             <button class="btn-filter" data-filter="shared">
                 <i class="fas fa-share-alt"></i>
@@ -167,144 +178,189 @@
             </button>
         </div>
         <div class="toolbar-right">
-            <button class="btn-add-folder btn-primary">
-                <i class="fas fa-folder-plus"></i>
-                Nova Pasta
+            <button id="auditToggle" class="btn-action btn-audit" title="Habilitar edição/auditoria">
+                <i class="fas fa-shield-alt"></i>
+                Auditoria
             </button>
         </div>
     </div>
 
-    <!-- Grid de Áreas de Trabalho -->
-    <div class="workspace-grid">
-        {% for workspace in workspaces %}
-        <div class="workspace-card">
-            <div class="workspace-header">
-                <h3 class="workspace-title">{{ workspace.nome }}</h3>
-                <button class="workspace-menu">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-            </div>
-            <div class="workspace-stats">
-                <div class="workspace-stat">
-                    <i class="fas fa-folder"></i>
-                    <span>{{ workspace.folders_count }} pastas</span>
-                </div>
-                <div class="workspace-stat">
-                    <i class="fas fa-users"></i>
-                    <span>{{ workspace.members_count }} membros</span>
-                </div>
-            </div>
-            <div class="workspace-members">
-                {% for member in workspace.members|slice:":3" %}
-                <div class="member-avatar" title="{{ member.name }}">
-                    {{ member.initials }}
-                </div>
-                {% endfor %}
-                {% if workspace.members|length > 3 %}
-                <div class="member-avatar more-members" title="Mais membros">
-                    +{{ workspace.members|length|add:"-3" }}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    <div class="workspace-grid">
-        {% if boards %}
-            {% for board in boards %}
-            <div class="workspace-card">
-                <div class="workspace-header">
-                    <h3 class="workspace-title">{{ board.nome }}</h3>
-                    <a class="workspace-menu" href="/board/{{ board.id }}/">
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="workspace-stats">
-                    <div class="workspace-stat">
-                        <i class="fas fa-clock"></i>
-                        <span>Criado: {{ board.created_at|date:'d/m/Y' }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="no-workspaces">
-                Nenhuma pasta criada neste workspace ainda!
-            </div>
-        {% endif %}
-    </div>
+    <!-- Grid de Áreas de Trabalho - carregado via API -->
+    <div id="currentUser" data-id="{{ current_user_id|default:0 }}" style="display:none;"></div>
+    <div id="workspacesContainer" class="workspace-grid"></div>
+    <div id="emptyState" style="display:none; padding:20px; color:#666;">Nenhuma área de trabalho encontrada.</div>
+    
 {% endblock %}
 
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const workspaceTitle = document.getElementById('workspaceTitle');
-        
-        // Salvar o título quando perder o foco ou pressionar Enter
-        workspaceTitle.addEventListener('blur', saveWorkspaceTitle);
-        workspaceTitle.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                workspaceTitle.blur();
-            }
-        });
+<script type="module">
+    import { auth } from '/static/js/api/auth.js';
 
-        function saveWorkspaceTitle() {
-            const newTitle = workspaceTitle.textContent.trim();
-            if (!newTitle) {
-                workspaceTitle.textContent = 'Nova Área de Trabalho';
-                return;
-            }
+    const API_URL = '/api/v1/workspace/';
+    const currentUserId = document.getElementById('currentUser').dataset.id; // usuário atual obtido de atributo data
+    const container = document.getElementById('workspacesContainer');
+    const emptyState = document.getElementById('emptyState');
+    const filterButtons = document.querySelectorAll('.btn-filter');
+    const auditToggle = document.getElementById('auditToggle');
+    let allWorkspaces = [];
+    let activeFilter = 'my-folders';
+    let auditMode = false;
 
-            // Aqui você pode adicionar a lógica para salvar o título via API
-            fetch('/api/v1/workspace/{{ workspace.id }}', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    nome: newTitle
-                })
-            })
-            .then(response => response.json())
-            .catch(error => {
-                console.error('Erro ao salvar título:', error);
-                // Você pode adicionar uma notificação de erro aqui
-            });
-        }
-
-        // Função auxiliar para pegar o cookie do CSRF
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        // Filtros da toolbar
-        const filterButtons = document.querySelectorAll('.btn-filter');
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                // Aqui você pode adicionar a lógica de filtro
-            });
-        });
-
-        // Botão de nova pasta
-        document.querySelector('.btn-add-folder').addEventListener('click', function() {
-            // Aqui você pode adicionar a lógica para criar nova pasta
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchWorkspaces();
+        setupFilters();
+        setupAuditToggle();
+        setupDeleteDelegation();
     });
+
+    function setupFilters() {
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeFilter = btn.dataset.filter;
+                render();
+            });
+        });
+    }
+
+    async function fetchWorkspaces(rql = '') {
+        try {
+            const url = rql ? `${API_URL}?${rql}` : API_URL;
+            const resp = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${auth.getAccessToken()}`,
+                    'Accept': 'application/json'
+                }
+            });
+            if (!resp.ok) throw new Error('Falha ao carregar workspaces');
+            allWorkspaces = await resp.json();
+            render();
+        } catch (e) {
+            console.error('Erro carregando workspaces:', e);
+            container.innerHTML = '<div style="color:#c00;">Erro ao carregar áreas de trabalho.</div>';
+        }
+    }
+
+    function render() {
+        container.innerHTML = '';
+        let data = [...allWorkspaces];
+
+        if (activeFilter === 'my-folders') {
+            data = data.filter(ws => ws.is_owner === true);
+        } else if (activeFilter === 'shared') {
+            // Mostrar apenas workspaces que não são de propriedade do usuário
+            // e dos quais o usuário é membro
+            data = data.filter(ws => {
+                if (ws.is_owner === true) return false;
+                if (!Array.isArray(ws.members)) return false;
+                return ws.members.some(m => String(m.id) === String(currentUserId));
+            });
+        }
+
+        if (!data.length) {
+            emptyState.style.display = 'block';
+            return;
+        }
+        emptyState.style.display = 'none';
+
+        data.forEach(ws => container.appendChild(buildCard(ws)));
+    }
+
+    function buildCard(ws) {
+        const card = document.createElement('div');
+        card.className = 'workspace-card';
+        const isOwner = ws.is_owner || false;
+        const badge = isOwner
+            ? '<span class="badge" style="margin-left:8px; background:#e6f4ea; color:#1e7e34; padding:2px 8px; border-radius:12px; font-size:12px;">Proprietário</span>'
+            : '<span class="badge" style="margin-left:8px; background:#e8f0fe; color:#1a73e8; padding:2px 8px; border-radius:12px; font-size:12px;">Compartilhado</span>';
+
+        const members = Array.isArray(ws.members) ? ws.members : [];
+        const memberAvatars = members.slice(0,3).map(avatarHtml).join('');
+        const extra = members.length > 3 ? `<div class="member-avatar more-members" title="Mais membros">+${members.length - 3}</div>` : '';
+        const membersCount = ws.members_count || 0;
+        const foldersCount = ws.folders_count || 0;
+
+        card.innerHTML = `
+            <div class="workspace-header">
+                <h3 class="workspace-title">${escapeHtml(ws.nome || '')} ${badge}</h3>
+                <div class="workspace-header-actions">
+                    <a class="btn-primary" href="/workspace/${ws.id}/boards/" title="Acessar"><i class="fas fa-arrow-right"></i> Acessar</a>
+                    ${isOwner ? `<button class="btn-delete" data-id="${ws.id}" title="Excluir"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+            </div>
+            <div class="workspace-stats">
+                <div class="workspace-stat"><i class="fas fa-folder"></i><span>${foldersCount} pastas</span></div>
+                <div class="workspace-stat"><i class="fas fa-users"></i><span>${membersCount} membros</span></div>
+            </div>
+            <div class="workspace-members">${memberAvatars}${extra}</div>
+        `;
+        if (auditMode) card.classList.add('audit-on');
+        return card;
+    }
+
+    function avatarHtml(member) {
+        // Usa os dados do membro retornados pelo serializer
+        const initials = member.initials || '??';
+        const name = member.name || member.username || 'Membro';
+        return `<div class="member-avatar" title="${escapeHtml(name)}">${escapeHtml(initials)}</div>`;
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    function setupAuditToggle() {
+        auditToggle.addEventListener('click', () => {
+            auditMode = !auditMode;
+            auditToggle.classList.toggle('active', auditMode);
+            auditToggle.innerHTML = auditMode 
+                ? '<i class="fas fa-shield-alt"></i> Auditoria ON'
+                : '<i class="fas fa-shield-alt"></i> Auditoria';
+            // Re-render to show/hide delete buttons
+            render();
+        });
+    }
+
+    function setupDeleteDelegation() {
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-delete');
+            if (!btn) return;
+            const id = btn.getAttribute('data-id');
+            handleDelete(id, btn);
+        });
+    }
+
+    async function handleDelete(id, btn) {
+        if (!auditMode) return; // safety
+        if (!confirm('Tem certeza que deseja excluir esta área de trabalho? Esta ação é permanente.')) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        try {
+            const resp = await fetch(`/api/v1/workspace/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${auth.getAccessToken()}`,
+                    'Accept': 'application/json'
+                }
+            });
+            if (resp.status === 204 || resp.status === 200) {
+                // Remove from local array and re-render
+                allWorkspaces = allWorkspaces.filter(w => String(w.id) !== String(id));
+                render();
+            } else {
+                const txt = await resp.text();
+                alert('Falha ao excluir: ' + txt);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i>';
+            }
+        } catch (err) {
+            console.error('Erro ao excluir workspace', err);
+            alert('Erro de rede ao excluir.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i>';
+        }
+    }
 </script>
 {% endblock %}

@@ -56,7 +56,14 @@ class ContratosSubelement(models.Model):
         self.valor_unitario_reajustado = self.valor_unitario_anterior + (self.valor_unitario_anterior * (self.valor_ipca / 100))
         self.valor_total_reajustado = self.quantidade * self.valor_unitario_reajustado
         super().save(*args, **kwargs)
-        self.Element.atualizar_totais()
+        if hasattr(self.element, 'atualizar_totais'):
+            self.element.atualizar_totais()
+
+    def delete(self, *args, **kwargs):
+        element = self.element
+        super().delete(*args, **kwargs)
+        if element and hasattr(element, 'atualizar_totais'):
+            element.atualizar_totais()
 
     class Meta:
         verbose_name = 'Subelemento Contratos'

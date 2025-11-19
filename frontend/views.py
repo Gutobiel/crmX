@@ -163,6 +163,7 @@ def sheet_detail2(request):
         'board': board,
         'workspace': workspace,
         'contratos': contratos_qs.order_by('id'),
+        
         'form': form,
         'can_add_contrato': available_targets,
         'show_board_field': board is None,

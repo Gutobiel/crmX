@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.suggest.enabled": true,
+    "terminal.integrated.defaultProfile.windows": null,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "terminal.integrated.allowChords": false
+}

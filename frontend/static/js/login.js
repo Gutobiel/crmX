@@ -16,16 +16,11 @@ class LoginForm {
 
     init() {
         if (!this.form) {
-            console.warn('Login form not found on page');
+            console.error('Login form not found on page');
             return;
         }
 
-        // Redireciona se já autenticado
-        if (auth.isAuthenticated()) {
-            window.location.href = '/home/';
-            return;
-        }
-
+        console.log('Login form initialized:', this.form);
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
 
         if (this.usernameInput) this.usernameInput.addEventListener('input', () => this.clearError());
@@ -33,7 +28,9 @@ class LoginForm {
     }
 
     async handleSubmit(e) {
+        console.log('handleSubmit called');
         e.preventDefault();
+        console.log('preventDefault executed');
 
         const usernameOrEmail = this.usernameInput ? this.usernameInput.value.trim() : '';
         const password = this.passwordInput ? this.passwordInput.value.trim() : '';

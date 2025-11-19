@@ -11,3 +11,8 @@ class ContratosSubelementSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContratosSubelement
         fields = '__all__'
+        read_only_fields = (
+            'valor_total',
+            'valor_unitario_reajustado',
+            'valor_total_reajustado',
+        )

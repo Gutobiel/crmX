@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from boards.models import Board
 
 class Element(models.Model):
@@ -30,6 +31,18 @@ class ContratosElement(models.Model):
     
     def __str__(self):
         return f"{self.elemento} - {self.empresa}" if self.elemento else f"Contrato #{self.id}"
+
+    def atualizar_totais(self):
+        aggregates = self.subElements.aggregate(
+            total_anterior=Sum('valor_total'),
+            total_reajustado=Sum('valor_total_reajustado'),
+            quantidade_total=Sum('quantidade'),
+        )
+
+        self.valor_total_anterior = aggregates.get('total_anterior') or 0
+        self.valor_total_reajustado = aggregates.get('total_reajustado') or 0
+        self.qtd_total_itens = aggregates.get('quantidade_total') or 0
+        self.save(update_fields=['valor_total_anterior', 'valor_total_reajustado', 'qtd_total_itens'])
 
 
 class ElementCollaborator(models.Model):

@@ -74,6 +74,123 @@
             color: #302754;
         }
 
+        .sheet-data-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .sheet-data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .sheet-data-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #302754;
+            font-weight: 600;
+        }
+
+        .sheet-data-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sheet-inline {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid #333781;
+            background: #333781;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-sheet-inline:hover {
+            background: #252d6e;
+        }
+
+        .sheet-data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .sheet-data-table th,
+        .sheet-data-table td {
+            border: 1px solid #e5e9f2;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        .sheet-data-table th {
+            background-color: #f0f1f7;
+            color: #302754;
+            font-weight: 600;
+        }
+
+        .sheet-data-table tbody tr:nth-child(even) {
+            background-color: #fafbff;
+        }
+
+        .column-editable {
+            display: block;
+            width: 100%;
+        }
+
+        .column-editable[contenteditable="true"] {
+            cursor: text;
+            background-color: #fffdf2;
+        }
+
+        .column-editable[contenteditable="true"]:focus {
+            outline: none;
+            background-color: #ffffcc;
+        }
+
+        .sheet-row--sub td.sheet-cell:first-child {
+            padding-left: 32px;
+        }
+
+        .sheet-cell-actions {
+            white-space: nowrap;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            width: 200px;
+        }
+
+        .sheet-cell-actions .btn-sheet-inline {
+            background: transparent;
+            color: #333781;
+        }
+
+        .sheet-cell-actions .btn-sheet-inline:hover {
+            background: #333781;
+            color: #fff;
+        }
+
+        .sheet-empty-cell {
+            text-align: center;
+            padding: 30px 0;
+            color: #666;
+            font-style: italic;
+        }
+
         .contracts-section {
             background: white;
             border-radius: 12px;
@@ -273,6 +390,65 @@
         </div>
     </div>
 
+    <section class="sheet-data-section">
+        <div class="sheet-data-header">
+            <h2>Dados da planilha</h2>
+            <div class="sheet-data-actions">
+                <button type="button" class="btn-sheet-inline" id="btnAddRow">
+                    <i class="fas fa-plus"></i> Adicionar linha
+                </button>
+                {% if sheet.tipo == 'generico' %}
+                    <button type="button" class="btn-sheet-inline" id="btnAddColumn">
+                        <i class="fas fa-columns"></i> Adicionar coluna
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if columns %}
+            <div class="table-wrapper">
+                <table class="sheet-data-table" data-columns-count="{{ sheet_columns_count }}">
+                    <thead>
+                        <tr>
+                            {% for column in columns %}
+                                <th>
+                                    <span
+                                        class="column-editable editable-wrapper"
+                                        contenteditable="{{ column.editavel|yesno:'true,false' }}"
+                                        data-column-id="{{ column.id }}"
+                                        data-editable="{{ column.editavel|yesno:'true,false' }}"
+                                        data-value="{{ column.nome|default_if_none:'' }}">
+                                        {{ column.nome|default:'(Sem nome)' }}
+                                    </span>
+                                </th>
+                            {% endfor %}
+                            <th class="sheet-actions-header">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if sheet_rows %}
+                            {% for row in sheet_rows %}
+                                {% include 'sheet/_row.html' with row=row %}
+                            {% endfor %}
+                        {% else %}
+                            <tr class="sheet-empty-row" data-placeholder-row="true">
+                                <td colspan="{{ sheet_columns_count|add:1 }}" class="sheet-empty-cell">
+                                    Nenhuma linha cadastrada.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="sheet-empty-cell" style="border: 1px dashed #d7dcf0; border-radius: 12px;">
+                <i class="fas fa-columns" style="font-size: 36px; display: block; margin-bottom: 10px;"></i>
+                Nenhuma coluna configurada para esta planilha.
+            </div>
+        {% endif %}
+    </section>
+
+    {% if sheet.tipo == 'contratos' %}
     <section class="contracts-section">
         <div class="contracts-header">
             <h2>Contratos vinculados</h2>
@@ -392,202 +568,717 @@
             </table>
         </div>
     </section>
+    {% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script type="module">
     import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
 
-    const API_BASE = '/api/v1/contratos/';
+    const sheetId = Number('{{ sheet.id }}');
+    const sheetTipo = '{{ sheet.tipo|escapejs }}';
+    const SHEET_API_BASE = `/api/v1/sheets/${sheetId}/`;
+    const CONTRACTS_API_BASE = '/api/v1/contratos/';
 
-    const formatCurrency = (value) => {
-        const numeric = Number(value);
-        if (Number.isNaN(numeric)) {
-            return 'R$ 0,00';
-        }
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-            minimumFractionDigits: 2,
-        }).format(numeric);
-    };
+    const initSheetSection = () => {
+        const addRowBtn = document.getElementById('btnAddRow');
+        const addColumnBtn = document.getElementById('btnAddColumn');
 
-    const formatDisplay = (value, type) => {
-        if (value === null || value === undefined || value === '') {
-            return '-';
-        }
-        if (type === 'currency') {
-            return formatCurrency(value);
-        }
-        return String(value);
-    };
-
-    const parseValue = (text, type) => {
-        const trimmed = text.trim();
-        if (!trimmed) {
-            return '';
-        }
-        if (type === 'integer') {
-            const cleaned = trimmed.replace(/[^0-9-]/g, '');
-            const intVal = parseInt(cleaned, 10);
-            if (Number.isNaN(intVal)) {
-                throw new Error('Valor invalido');
-            }
-            return intVal;
-        }
-        if (type === 'currency') {
-            const sanitized = trimmed.replace(/[^0-9,.-]/g, '');
-            const withoutThousands = sanitized.replace(/\.(?=\d{3}(\D|$))/g, '');
-            const normalized = withoutThousands.replace(/,/g, '.');
-            const floatVal = parseFloat(normalized);
-            if (Number.isNaN(floatVal)) {
-                throw new Error('Valor invalido');
-            }
-            return floatVal;
-        }
-        return trimmed;
-    };
-
-    const normalizeValueForDataset = (value, type) => {
-        if (value === null || value === undefined || value === '') {
-            return '';
-        }
-        if (type === 'integer') {
-            const numeric = Number(value);
-            return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
-        }
-        if (type === 'currency') {
-            const numeric = Number(value);
-            return Number.isNaN(numeric) ? '' : String(numeric);
-        }
-        return String(value);
-    };
-
-    const normalizeForComparison = (value, type) => {
-        if (value === null || value === undefined || value === '') {
-            return '';
-        }
-        if (type === 'integer') {
-            const numeric = Number(value);
-            return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
-        }
-        if (type === 'currency') {
-            const numeric = Number(value);
-            return Number.isNaN(numeric) ? '' : numeric.toFixed(2);
-        }
-        return String(value).trim();
-    };
-
-    const applyValueToCell = (cell, value) => {
-        const type = cell.dataset.type;
-        const normalized = normalizeValueForDataset(value, type);
-        cell.dataset.value = normalized;
-
-        let displayValue = '';
-        if (normalized !== '') {
-            if (type === 'integer') {
-                displayValue = Number(parseInt(normalized, 10));
-            } else if (type === 'currency') {
-                displayValue = Number(parseFloat(normalized));
-            } else {
-                displayValue = normalized;
-            }
-        }
-
-        const rendered = formatDisplay(displayValue, type);
-        cell.textContent = rendered === '' ? '-' : rendered;
-    };
-
-    const showError = (cell, message) => {
-        cell.classList.add('cell-error');
-        cell.setAttribute('title', message);
-        setTimeout(() => {
-            cell.classList.remove('cell-error');
-            cell.removeAttribute('title');
-            applyValueToCell(cell, cell.dataset.value);
-        }, 2000);
-    };
-
-    const updateContratoField = async (cell, contratoId, field, value) => {
-        cell.classList.add('cell-saving');
-        try {
-            const headers = await getAuthHeaders();
-            headers['Content-Type'] = 'application/json';
-
-            const response = await fetch(`${API_BASE}${contratoId}/`, {
-                method: 'PATCH',
-                headers,
-                body: JSON.stringify({ [field]: value })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Erro ao salvar (status ${response.status})`);
+        async function handleAddColumn() {
+            if (!addColumnBtn || addColumnBtn.disabled) {
+                return;
             }
 
-            let data;
+            const nome = window.prompt('Informe o nome da nova coluna:', 'Nova coluna');
+            if (nome === null) {
+                return;
+            }
+            const trimmed = nome.trim();
+            if (!trimmed) {
+                window.alert('O nome da coluna não pode ficar vazio.');
+                return;
+            }
+
+            addColumnBtn.disabled = true;
             try {
-                data = await response.json();
-            } catch (jsonError) {
-                data = {};
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${SHEET_API_BASE}add_column/`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ nome: trimmed })
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text();
+                    throw new Error(detail || `Erro ao adicionar coluna (status ${response.status})`);
+                }
+
+                window.location.reload();
+            } catch (error) {
+                console.error('add_column error', error);
+                window.alert(error.message || 'Erro ao adicionar coluna.');
+                addColumnBtn.disabled = false;
             }
-            const updatedValue = Object.prototype.hasOwnProperty.call(data, field) ? data[field] : value;
-            applyValueToCell(cell, updatedValue);
-        } catch (error) {
-            showError(cell, error.message || 'Erro ao salvar');
-        } finally {
-            cell.classList.remove('cell-saving');
         }
-    };
 
-    const setupEditableCells = () => {
-        document.querySelectorAll('.editable-wrapper[data-field]').forEach((cell) => {
-            cell.addEventListener('focus', () => {
-                cell.dataset.originalValue = cell.dataset.value ?? '';
-                if ((cell.dataset.value ?? '') === '' && cell.textContent.trim() === '-') {
-                    cell.textContent = '';
+        if (addColumnBtn) {
+            addColumnBtn.addEventListener('click', handleAddColumn);
+        }
+
+        const table = document.querySelector('.sheet-data-table');
+        if (!table) {
+            if (addRowBtn) {
+                addRowBtn.disabled = true;
+            }
+            return;
+        }
+
+        const tbody = table.querySelector('tbody');
+        const state = { columns: [] };
+
+        const updateColumnsMeta = () => {
+            state.columns = Array.from(table.querySelectorAll('thead .column-editable')).map((element, index) => ({
+                id: Number(element.dataset.columnId),
+                editable: element.dataset.editable === 'true',
+                element,
+                index,
+            }));
+        };
+
+        updateColumnsMeta();
+
+        const applyCellValue = (cell, value) => {
+            const normalized = value != null ? String(value).trim() : '';
+            cell.dataset.value = normalized;
+            cell.textContent = normalized === '' ? '-' : normalized;
+        };
+
+        const removePlaceholderRow = () => {
+            if (!tbody) {
+                return;
+            }
+            const placeholder = tbody.querySelector('tr.sheet-empty-row');
+            if (placeholder) {
+                placeholder.remove();
+            }
+        };
+
+        const ensurePlaceholderRow = () => {
+            if (!tbody) {
+                return;
+            }
+            const hasDataRow = tbody.querySelector('tr.sheet-row');
+            if (hasDataRow) {
+                return;
+            }
+            const existing = tbody.querySelector('tr.sheet-empty-row');
+            if (existing) {
+                return;
+            }
+            const tr = document.createElement('tr');
+            tr.classList.add('sheet-empty-row');
+            tr.dataset.placeholderRow = 'true';
+
+            const td = document.createElement('td');
+            td.classList.add('sheet-empty-cell');
+            const colSpan = Math.max(state.columns.length + 1, 1);
+            td.colSpan = colSpan;
+            td.textContent = 'Nenhuma linha cadastrada.';
+
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        };
+
+        const createActionButton = (className, iconClass, label, rowId) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `btn-sheet-inline ${className}`;
+            button.dataset.rowId = String(rowId);
+            button.innerHTML = `<i class="${iconClass}"></i> ${label}`;
+            return button;
+        };
+
+        const createRowElement = (rowId, { isSubrow = false, parentId = null } = {}) => {
+            const tr = document.createElement('tr');
+            tr.classList.add('sheet-row');
+            if (isSubrow) {
+                tr.classList.add('sheet-row--sub');
+            }
+            tr.dataset.rowId = String(rowId);
+            if (parentId) {
+                tr.dataset.parentId = String(parentId);
+            }
+
+            state.columns.forEach(({ id }) => {
+                const td = document.createElement('td');
+                td.classList.add('editable-wrapper', 'sheet-cell');
+                td.setAttribute('contenteditable', 'true');
+                td.dataset.rowId = String(rowId);
+                td.dataset.columnId = String(id);
+                td.dataset.value = '';
+                td.textContent = '-';
+                tr.appendChild(td);
+            });
+
+            const actions = document.createElement('td');
+            actions.classList.add('sheet-cell-actions');
+            if (!isSubrow) {
+                const addSub = createActionButton('btn-add-subrow', 'fas fa-level-down-alt', 'Sub-linha', rowId);
+                actions.appendChild(addSub);
+            }
+            const removeBtn = createActionButton('btn-delete-row', 'fas fa-trash', 'Excluir', rowId);
+            actions.appendChild(removeBtn);
+            tr.appendChild(actions);
+
+            return tr;
+        };
+
+        const insertRowElement = (rowElement, parentId = null) => {
+            if (!tbody) {
+                return;
+            }
+            removePlaceholderRow();
+
+            if (!parentId) {
+                tbody.appendChild(rowElement);
+                return;
+            }
+
+            const siblings = Array.from(tbody.querySelectorAll(`tr.sheet-row[data-parent-id="${parentId}"]`));
+            if (siblings.length > 0) {
+                siblings[siblings.length - 1].after(rowElement);
+                return;
+            }
+
+            const parentRow = tbody.querySelector(`tr.sheet-row[data-row-id="${parentId}"]`);
+            if (parentRow) {
+                parentRow.after(rowElement);
+                return;
+            }
+
+            tbody.appendChild(rowElement);
+        };
+
+        const removeRowAndDescendants = (rowId) => {
+            if (!tbody) {
+                return;
+            }
+            const toRemove = new Set([String(rowId)]);
+            let added;
+
+            do {
+                added = false;
+                tbody.querySelectorAll('tr.sheet-row').forEach((row) => {
+                    const parentId = row.dataset.parentId;
+                    if (parentId && toRemove.has(parentId) && !toRemove.has(row.dataset.rowId)) {
+                        toRemove.add(row.dataset.rowId);
+                        added = true;
+                    }
+                });
+            } while (added);
+
+            toRemove.forEach((id) => {
+                const row = tbody.querySelector(`tr.sheet-row[data-row-id="${id}"]`);
+                if (row) {
+                    row.remove();
                 }
             });
 
-            cell.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    cell.blur();
-                }
-            });
+            ensurePlaceholderRow();
+        };
 
-            cell.addEventListener('blur', async () => {
-                const contratoId = cell.closest('tr')?.dataset?.contratoId;
-                const field = cell.dataset.field;
-                const type = cell.dataset.type;
-                if (!contratoId || !field) {
+        const handleCellFocus = (event) => {
+            const cell = event.target.closest('.sheet-cell');
+            if (!cell) {
+                return;
+            }
+            const currentValue = cell.dataset.value ?? '';
+            cell.dataset.originalValue = currentValue;
+            if (currentValue === '') {
+                cell.textContent = '';
+            }
+        };
+
+        const handleCellKeyDown = (event) => {
+            const cell = event.target.closest('.sheet-cell');
+            if (!cell) {
+                return;
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                cell.blur();
+            }
+        };
+
+        const handleCellBlur = (event) => {
+            const cell = event.target.closest('.sheet-cell');
+            if (!cell) {
+                return;
+            }
+
+            const rowId = Number(cell.dataset.rowId);
+            const columnId = Number(cell.dataset.columnId);
+            if (!rowId || !columnId) {
+                return;
+            }
+
+            const newValue = cell.textContent.trim();
+            const originalValue = (cell.dataset.originalValue ?? '').trim();
+            delete cell.dataset.originalValue;
+
+            if (newValue === originalValue) {
+                applyCellValue(cell, cell.dataset.value ?? '');
+                return;
+            }
+
+            saveCellValue(cell, newValue);
+        };
+
+        const saveCellValue = async (cell, value) => {
+            const rowId = Number(cell.dataset.rowId);
+            const columnId = Number(cell.dataset.columnId);
+            const payload = {
+                row_id: rowId,
+                column_id: columnId,
+                value,
+            };
+
+            if (cell.dataset.cellId) {
+                payload.cell_id = Number(cell.dataset.cellId);
+            }
+
+            cell.classList.add('cell-saving');
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${SHEET_API_BASE}update_cell/`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text();
+                    throw new Error(detail || `Erro ao salvar célula (status ${response.status})`);
+                }
+
+                const data = await response.json().catch(() => ({}));
+                if (data && data.cell_id) {
+                    cell.dataset.cellId = String(data.cell_id);
+                }
+
+                applyCellValue(cell, value);
+            } catch (error) {
+                console.error('update_cell error', error);
+                cell.classList.add('cell-error');
+                setTimeout(() => cell.classList.remove('cell-error'), 2000);
+                applyCellValue(cell, cell.dataset.value ?? '');
+            } finally {
+                cell.classList.remove('cell-saving');
+            }
+        };
+
+        const handleAddRow = async () => {
+            if (!state.columns.length) {
+                window.alert('Crie uma coluna antes de adicionar linhas.');
+                return;
+            }
+            if (addRowBtn) {
+                addRowBtn.disabled = true;
+            }
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${SHEET_API_BASE}add_row/`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({}),
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text();
+                    throw new Error(detail || `Erro ao adicionar linha (status ${response.status})`);
+                }
+
+                const data = await response.json();
+                const newRow = createRowElement(data.row_id);
+                insertRowElement(newRow);
+                newRow.querySelector('.sheet-cell')?.focus();
+            } catch (error) {
+                console.error('add_row error', error);
+                window.alert(error.message || 'Erro ao adicionar linha.');
+            } finally {
+                if (addRowBtn) {
+                    addRowBtn.disabled = false;
+                }
+            }
+        };
+
+        const handleAddSubrow = async (rowId, trigger) => {
+            if (!state.columns.length) {
+                window.alert('Crie uma coluna antes de adicionar linhas.');
+                return;
+            }
+            if (trigger) {
+                trigger.disabled = true;
+            }
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${SHEET_API_BASE}add_subrow/`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ parent_row_id: rowId }),
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text();
+                    throw new Error(detail || `Erro ao adicionar sublinha (status ${response.status})`);
+                }
+
+                const data = await response.json();
+                const subRow = createRowElement(data.row_id, { isSubrow: true, parentId: rowId });
+                insertRowElement(subRow, rowId);
+                subRow.querySelector('.sheet-cell')?.focus();
+            } catch (error) {
+                console.error('add_subrow error', error);
+                window.alert(error.message || 'Erro ao adicionar sublinha.');
+            } finally {
+                if (trigger) {
+                    trigger.disabled = false;
+                }
+            }
+        };
+
+        const handleDeleteRow = async (rowId, trigger) => {
+            if (!window.confirm('Tem certeza de que deseja excluir esta linha?')) {
+                return;
+            }
+            if (trigger) {
+                trigger.disabled = true;
+            }
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${SHEET_API_BASE}remove_row/`, {
+                    method: 'DELETE',
+                    headers,
+                    body: JSON.stringify({ row_id: rowId }),
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text();
+                    throw new Error(detail || `Erro ao excluir linha (status ${response.status})`);
+                }
+
+                removeRowAndDescendants(rowId);
+            } catch (error) {
+                console.error('remove_row error', error);
+                window.alert(error.message || 'Erro ao excluir linha.');
+            } finally {
+                if (trigger) {
+                    trigger.disabled = false;
+                }
+            }
+        };
+
+        if (addRowBtn) {
+            addRowBtn.disabled = state.columns.length === 0;
+            if (!addRowBtn.disabled) {
+                addRowBtn.addEventListener('click', handleAddRow);
+            }
+        }
+
+        if (tbody) {
+            tbody.addEventListener('focusin', handleCellFocus);
+            tbody.addEventListener('focusout', handleCellBlur);
+            tbody.addEventListener('keydown', handleCellKeyDown);
+
+            tbody.addEventListener('click', (event) => {
+                const addSubBtn = event.target.closest('.btn-add-subrow');
+                if (addSubBtn) {
+                    const targetRowId = Number(addSubBtn.dataset.rowId);
+                    if (targetRowId) {
+                        handleAddSubrow(targetRowId, addSubBtn);
+                    }
                     return;
                 }
 
+                const deleteBtn = event.target.closest('.btn-delete-row');
+                if (deleteBtn) {
+                    const targetRowId = Number(deleteBtn.dataset.rowId);
+                    if (targetRowId) {
+                        handleDeleteRow(targetRowId, deleteBtn);
+                    }
+                }
+            });
+        }
+
+        state.columns.forEach(({ element, editable }) => {
+            const applyColumnValue = (value) => {
+                const normalized = value != null ? String(value).trim() : '';
+                element.dataset.value = normalized;
+                element.textContent = normalized === '' ? '(Sem nome)' : normalized;
+            };
+
+            if (!editable) {
+                element.setAttribute('contenteditable', 'false');
+                return;
+            }
+
+            element.addEventListener('focus', () => {
+                element.dataset.originalValue = element.dataset.value ?? element.textContent.trim();
+            });
+
+            element.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    element.blur();
+                }
+            });
+
+            element.addEventListener('blur', async () => {
+                const original = (element.dataset.originalValue ?? '').trim();
+                delete element.dataset.originalValue;
+
+                const newValue = element.textContent.trim();
+                if (newValue === '') {
+                    window.alert('O nome da coluna não pode ficar vazio.');
+                    applyColumnValue(original);
+                    return;
+                }
+                if (newValue === original) {
+                    applyColumnValue(original);
+                    return;
+                }
+
+                element.classList.add('cell-saving');
                 try {
-                    if (type !== 'text' && cell.textContent.trim() === '') {
-                        applyValueToCell(cell, cell.dataset.value);
-                        return;
+                    const headers = await getAuthHeaders();
+                    headers['Content-Type'] = 'application/json';
+
+                    const response = await fetch(`${SHEET_API_BASE}update_column/`, {
+                        method: 'PATCH',
+                        headers,
+                        body: JSON.stringify({ column_id: Number(element.dataset.columnId), nome: newValue }),
+                    });
+
+                    if (!response.ok) {
+                        const detail = await response.text();
+                        throw new Error(detail || `Erro ao renomear coluna (status ${response.status})`);
                     }
-                    const parsedValue = parseValue(cell.textContent, type);
-                    const normalized = parsedValue === '' ? '' : parsedValue;
-                    const originalNormalized = normalizeForComparison(cell.dataset.originalValue ?? '', type);
-                    const currentNormalized = normalizeForComparison(normalized, type);
-                    if (currentNormalized === originalNormalized) {
-                        applyValueToCell(cell, cell.dataset.value);
-                        return;
-                    }
-                    await updateContratoField(cell, contratoId, field, normalized);
+
+                    applyColumnValue(newValue);
                 } catch (error) {
-                    showError(cell, error.message || 'Valor invalido');
+                    console.error('update_column error', error);
+                    element.classList.add('cell-error');
+                    setTimeout(() => element.classList.remove('cell-error'), 2000);
+                    applyColumnValue(original);
+                } finally {
+                    element.classList.remove('cell-saving');
                 }
             });
         });
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
+    const initContractsSection = () => {
         const toggleBtn = document.getElementById('toggleAddContract');
         const wrapper = document.getElementById('addContractWrapper');
         const cancelBtn = document.getElementById('cancelAddContract');
+        const contractsTable = document.querySelector('.contracts-table');
+
+        const formatCurrency = (value) => {
+            const numeric = Number(value);
+            if (Number.isNaN(numeric)) {
+                return 'R$ 0,00';
+            }
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+            }).format(numeric);
+        };
+
+        const formatDisplay = (value, type) => {
+            if (value === null || value === undefined || value === '') {
+                return '-';
+            }
+            if (type === 'currency') {
+                return formatCurrency(value);
+            }
+            return String(value);
+        };
+
+        const parseValue = (text, type) => {
+            const trimmed = text.trim();
+            if (!trimmed) {
+                return '';
+            }
+            if (type === 'integer') {
+                const cleaned = trimmed.replace(/[^0-9-]/g, '');
+                const intVal = parseInt(cleaned, 10);
+                if (Number.isNaN(intVal)) {
+                    throw new Error('Valor invalido');
+                }
+                return intVal;
+            }
+            if (type === 'currency') {
+                const sanitized = trimmed.replace(/[^0-9,.-]/g, '');
+                const withoutThousands = sanitized.replace(/\.(?=\d{3}(\D|$))/g, '');
+                const normalized = withoutThousands.replace(/,/g, '.');
+                const floatVal = parseFloat(normalized);
+                if (Number.isNaN(floatVal)) {
+                    throw new Error('Valor invalido');
+                }
+                return floatVal;
+            }
+            return trimmed;
+        };
+
+        const normalizeValueForDataset = (value, type) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            if (type === 'integer') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
+            }
+            if (type === 'currency') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : String(numeric);
+            }
+            return String(value);
+        };
+
+        const normalizeForComparison = (value, type) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            if (type === 'integer') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : String(Math.trunc(numeric));
+            }
+            if (type === 'currency') {
+                const numeric = Number(value);
+                return Number.isNaN(numeric) ? '' : numeric.toFixed(2);
+            }
+            return String(value).trim();
+        };
+
+        const applyValueToCell = (cell, value) => {
+            const type = cell.dataset.type;
+            const normalized = normalizeValueForDataset(value, type);
+            cell.dataset.value = normalized;
+
+            let displayValue = '';
+            if (normalized !== '') {
+                if (type === 'integer') {
+                    displayValue = Number(parseInt(normalized, 10));
+                } else if (type === 'currency') {
+                    displayValue = Number(parseFloat(normalized));
+                } else {
+                    displayValue = normalized;
+                }
+            }
+
+            const rendered = formatDisplay(displayValue, type);
+            cell.textContent = rendered === '' ? '-' : rendered;
+        };
+
+        const showError = (cell, message) => {
+            cell.classList.add('cell-error');
+            cell.setAttribute('title', message);
+            setTimeout(() => {
+                cell.classList.remove('cell-error');
+                cell.removeAttribute('title');
+                applyValueToCell(cell, cell.dataset.value);
+            }, 2000);
+        };
+
+        const updateContratoField = async (cell, contratoId, field, value) => {
+            cell.classList.add('cell-saving');
+            try {
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const response = await fetch(`${CONTRACTS_API_BASE}${contratoId}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ [field]: value }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ao salvar (status ${response.status})`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    data = {};
+                }
+                const updatedValue = Object.prototype.hasOwnProperty.call(data, field) ? data[field] : value;
+                applyValueToCell(cell, updatedValue);
+            } catch (error) {
+                showError(cell, error.message || 'Erro ao salvar');
+            } finally {
+                cell.classList.remove('cell-saving');
+            }
+        };
+
+        const setupEditableCells = () => {
+            if (!contractsTable) {
+                return;
+            }
+            contractsTable.querySelectorAll('.editable-wrapper[data-field]').forEach((cell) => {
+                cell.addEventListener('focus', () => {
+                    cell.dataset.originalValue = cell.dataset.value ?? '';
+                    if ((cell.dataset.value ?? '') === '' && cell.textContent.trim() === '-') {
+                        cell.textContent = '';
+                    }
+                });
+
+                cell.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        cell.blur();
+                    }
+                });
+
+                cell.addEventListener('blur', async () => {
+                    const contratoId = cell.closest('tr')?.dataset?.contratoId;
+                    const field = cell.dataset.field;
+                    const type = cell.dataset.type;
+                    if (!contratoId || !field) {
+                        return;
+                    }
+
+                    try {
+                        if (type !== 'text' && cell.textContent.trim() === '') {
+                            applyValueToCell(cell, cell.dataset.value);
+                            return;
+                        }
+                        const parsedValue = parseValue(cell.textContent, type);
+                        const normalized = parsedValue === '' ? '' : parsedValue;
+                        const originalNormalized = normalizeForComparison(cell.dataset.originalValue ?? '', type);
+                        const currentNormalized = normalizeForComparison(normalized, type);
+                        if (currentNormalized === originalNormalized) {
+                            applyValueToCell(cell, cell.dataset.value);
+                            return;
+                        }
+                        await updateContratoField(cell, contratoId, field, normalized);
+                    } catch (error) {
+                        showError(cell, error.message || 'Valor invalido');
+                    }
+                });
+            });
+        };
 
         if (toggleBtn && wrapper) {
             const updateAria = () => {
@@ -616,6 +1307,13 @@
         }
 
         setupEditableCells();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initSheetSection();
+        if (sheetTipo === 'contratos') {
+            initContractsSection();
+        }
     });
 </script>
 {% endblock %}

@@ -1,0 +1,29 @@
+<tr class="sheet-row{% if row.is_subrow %} sheet-row--sub{% endif %}" data-row-id="{{ row.id }}"{% if row.parent_id %} data-parent-id="{{ row.parent_id }}"{% endif %}>
+    {% for cell in row.cells %}
+        <td
+            class="editable-wrapper sheet-cell"
+            contenteditable="true"
+            data-row-id="{{ row.id }}"
+            data-column-id="{{ cell.column_id }}"
+            {% if cell.cell_id %}data-cell-id="{{ cell.cell_id }}"{% endif %}
+            data-value="{{ cell.value|default_if_none:'' }}"
+        >
+            {{ cell.value|default:'-' }}
+        </td>
+    {% endfor %}
+    <td class="sheet-cell-actions">
+        {% if not row.is_subrow %}
+            <button type="button" class="btn-sheet-inline btn-add-subrow" data-row-id="{{ row.id }}">
+                <i class="fas fa-level-down-alt"></i> Sub-linha
+            </button>
+        {% endif %}
+        <button type="button" class="btn-sheet-inline btn-delete-row" data-row-id="{{ row.id }}">
+            <i class="fas fa-trash"></i> Excluir
+        </button>
+    </td>
+</tr>
+{% if row.subrows %}
+    {% for child in row.subrows %}
+        {% include 'sheet/_row.html' with row=child %}
+    {% endfor %}
+{% endif %}

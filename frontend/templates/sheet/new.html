@@ -256,6 +256,8 @@
     
     const boardId = "{{ board.id }}";
     const boardDetailUrl = "{% url 'board_detail' workspace.id board.id %}";
+    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}"; // detalhe padrão
+    const sheetContratosDetailUrlTemplate = "{% url 'sheet_contratos_detail' 0 %}"; // detalhe específico de contratos
     let selectedTipo = null;
 
     // Seleção de template
@@ -321,7 +323,17 @@
                 
                 const sheet = await response.json();
                 alert('Planilha criada com sucesso!');
-                window.location.href = boardDetailUrl;
+
+                // Redirecionar para página específica conforme tipo
+                if (sheet.tipo === 'contratos') {
+                    // detalhe específico vinculado à planilha criada
+                    const contratosUrl = sheetContratosDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
+                    window.location.href = contratosUrl;
+                } else {
+                    // demais tipos (generico, colaboradores, produtos) usam detalhe padrão por enquanto
+                    const sheetUrl = sheetDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
+                    window.location.href = sheetUrl;
+                }
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao criar planilha: ' + error.message);

@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Prefetch
 from django.forms import HiddenInput
 from workspaces.models import Workspace
 from elements.models import ContratosElement
@@ -294,19 +294,55 @@ def new_sheet(request):
 @jwt_required
 def sheet_detail(request, sheet_id):
     """Renderiza a página de detalhe/edição de uma planilha."""
-    from sheets.models import Sheet
-    
+    from sheets.models import Sheet, Row, Cell
+
     sheet = Sheet.objects.filter(id=sheet_id).select_related(
         'board__workspace'
     ).first()
-    
+
     if not sheet:
         return redirect('workspace')
-    
+
+    columns = list(sheet.columns.all().order_by('order'))
+
+    subrows_prefetch = Prefetch(
+        'subrows',
+        queryset=Row.objects.order_by('order').prefetch_related(
+            Prefetch('cells', queryset=Cell.objects.select_related('column'))
+        )
+    )
+
+    rows_queryset = sheet.rows.filter(parent__isnull=True).order_by('order').prefetch_related(
+        Prefetch('cells', queryset=Cell.objects.select_related('column')),
+        subrows_prefetch
+    )
+
+    def serialize_row(row_instance):
+        cell_map = {cell.column_id: cell for cell in row_instance.cells.all()}
+        return {
+            'id': row_instance.id,
+            'is_subrow': row_instance.is_subrow,
+            'parent_id': row_instance.parent_id,
+            'cells': [
+                {
+                    'column_id': column.id,
+                    'cell_id': cell_map[column.id].id if column.id in cell_map else None,
+                    'value': cell_map[column.id].value if column.id in cell_map else ''
+                }
+                for column in columns
+            ],
+            'subrows': [serialize_row(subrow) for subrow in row_instance.subrows.all()]
+        }
+
+    rows_data = [serialize_row(row) for row in rows_queryset]
+
     return render(request, 'sheet/detail.html', {
         'sheet': sheet,
         'board': sheet.board,
         'workspace': sheet.board.workspace,
+        'columns': columns,
+        'sheet_rows': rows_data,
+        'sheet_columns_count': len(columns),
     })
 
 def logout_view(request):
@@ -328,3 +364,24 @@ def home2(request):
 
 def login_page(request):
     return render(request, "login/login2.html")
+
+
+@jwt_required
+def sheet_contratos_detail(request, sheet_id):
+    """Tela específica de contratos para uma planilha do tipo 'contratos'."""
+    from sheets.models import Sheet
+
+    sheet = Sheet.objects.filter(id=sheet_id).select_related('board__workspace').first()
+    if not sheet:
+        return redirect('workspace')
+
+    board = sheet.board
+    workspace = board.workspace if board else None
+
+    # A página de contratos já usa o mesmo layout/JS de `home.html`/`contratos_detail.html`
+    context = {
+        'sheet': sheet,
+        'board': board,
+        'workspace': workspace,
+    }
+    return render(request, 'sheet/contratos_detail.html', context)

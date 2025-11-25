@@ -279,23 +279,22 @@
         </div>
 
         {% if sheets %}
+            <div style="margin-bottom:10px; font-size:12px; color:#888;">Debug Sheets Count: {{ sheets|length }}</div>
             <div class="sheets-grid">
                 {% for sheet in sheets %}
                     <div class="sheet-card">
                         <div class="sheet-card-header">
                             <h3 class="sheet-card-title">{{ sheet.nome }}</h3>
-                            <span class="sheet-card-type">{{ sheet.get_tipo_display }}</span>
                         </div>
-                        <p class="sheet-card-desc">{{ sheet.anotacao|default:"Sem descrição cadastrada." }}</p>
+                        <p class="sheet-card-desc">{{ sheet.descricao|default:"Sem descrição cadastrada." }}</p>
                         <div class="sheet-card-meta">
-                            <span>Criada em {{ sheet.created_at|date:'d/m/Y' }}</span>
-                            <span>Atualizada em {{ sheet.updated_at|date:'d/m/Y' }}</span>
+                            <span>Criada {{ sheet.created_at|date:'d/m/Y' }}</span>
+                            <span>Atualizada {{ sheet.updated_at|date:'d/m/Y' }}</span>
                         </div>
                         <div class="sheet-card-footer">
-                            <a class="sheet-card-btn" href="/workspace/{{ workspace.id }}/board/{{ board.id }}/sheetsDetail/{{ sheet.id }}/">
-                                <i class="fas fa-eye"></i>
-                                Ver detalhes
-                            </a>
+                                <a class="sheet-card-btn" href="{% url 'sheet_detail' sheet.id %}">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
                         </div>
                     </div>
                 {% endfor %}
@@ -303,7 +302,7 @@
         {% else %}
             <div class="sheet-card-empty">
                 <i class="fas fa-table" style="font-size:36px; margin-bottom:12px;"></i>
-                <p>Nenhuma planilha cadastrada nesta pasta.</p>
+                <p>Nenhuma planilha criada nesta pasta.</p>
             </div>
         {% endif %}
     </div>

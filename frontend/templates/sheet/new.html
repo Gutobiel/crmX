@@ -256,8 +256,10 @@
     
     const boardId = "{{ board.id }}";
     const boardDetailUrl = "{% url 'board_detail' workspace.id board.id %}";
-    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}"; // detalhe padrão
-    const sheetContratosDetailUrlTemplate = "{% url 'sheet_contratos_detail' 0 %}"; // detalhe específico de contratos
+    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}"; // detalhe padrão (generico)
+    const sheetContratosDetailUrlTemplate = "{% url 'sheet_contratos_detail' 0 %}"; // contratos
+    const sheetProdutosDetailUrlTemplate = "{% url 'sheet_produtos_detail' 0 %}"; // produtos
+    const sheetColaboradoresDetailUrlTemplate = "{% url 'sheet_colaboradores_detail' 0 %}"; // colaboradores
     let selectedTipo = null;
 
     // Seleção de template
@@ -325,15 +327,17 @@
                 alert('Planilha criada com sucesso!');
 
                 // Redirecionar para página específica conforme tipo
-                if (sheet.tipo === 'contratos') {
-                    // detalhe específico vinculado à planilha criada
-                    const contratosUrl = sheetContratosDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
-                    window.location.href = contratosUrl;
+                let targetUrl;
+                if (selectedTipo === 'contratos') {
+                    targetUrl = sheetContratosDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
+                } else if (selectedTipo === 'produtos') {
+                    targetUrl = sheetProdutosDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
+                } else if (selectedTipo === 'colaboradores') {
+                    targetUrl = sheetColaboradoresDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
                 } else {
-                    // demais tipos (generico, colaboradores, produtos) usam detalhe padrão por enquanto
-                    const sheetUrl = sheetDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
-                    window.location.href = sheetUrl;
+                    targetUrl = sheetDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
                 }
+                window.location.href = targetUrl;
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao criar planilha: ' + error.message);

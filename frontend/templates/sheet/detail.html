@@ -62,6 +62,12 @@
             width: fit-content;
         }
 
+        .sheet-description {
+            margin: 0;
+            color: #555;
+            font-size: 14px;
+        }
+
         .sheet-context {
             display: flex;
             flex-wrap: wrap;
@@ -382,6 +388,9 @@
             <div class="sheet-title-wrapper">
                 <h1 class="sheet-title">{{ sheet.nome }}</h1>
                 <span class="sheet-type-badge">{{ sheet.get_tipo_display }}</span>
+                {% if sheet.descricao %}
+                    <p class="sheet-description">{{ sheet.descricao }}</p>
+                {% endif %}
                 <div class="sheet-context">
                     <span><strong>Pasta:</strong> {{ board.nome }}</span>
                       <span><strong>Area de trabalho:</strong> {{ workspace.nome }}</span>
@@ -397,7 +406,7 @@
                 <button type="button" class="btn-sheet-inline" id="btnAddRow">
                     <i class="fas fa-plus"></i> Adicionar linha
                 </button>
-                {% if sheet.tipo == 'generico' %}
+                {% if sheet.template_type == 'generico' %}
                     <button type="button" class="btn-sheet-inline" id="btnAddColumn">
                         <i class="fas fa-columns"></i> Adicionar coluna
                     </button>
@@ -448,7 +457,7 @@
         {% endif %}
     </section>
 
-    {% if sheet.tipo == 'contratos' %}
+    {% if sheet.template_type == 'contratos' %}
     <section class="contracts-section">
         <div class="contracts-header">
             <h2>Contratos vinculados</h2>
@@ -576,7 +585,7 @@
     import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
 
     const sheetId = Number('{{ sheet.id }}');
-    const sheetTipo = '{{ sheet.tipo|escapejs }}';
+    const sheetTipo = '{{ sheet.template_type|escapejs }}';
     const SHEET_API_BASE = `/api/v1/sheets/${sheetId}/`;
     const CONTRACTS_API_BASE = '/api/v1/contratos/';
 

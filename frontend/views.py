@@ -259,6 +259,7 @@ def board_detail(request, workspace_id, board_id):
     
     # Buscar planilhas do board
     sheets = Sheet.objects.filter(board=board).order_by('-created_at')
+    debug_sheet_values = list(sheets.values('id', 'nome', 'board_id', 'tipo'))
     
     # Debug
     print(f"DEBUG board_detail: Board ID={board.id}, Nome={board.nome}")
@@ -271,6 +272,7 @@ def board_detail(request, workspace_id, board_id):
         'workspace': board.workspace,
         'sheets': sheets,
         'workspace_id': workspace_id,
+        'sheets_debug_values': debug_sheet_values,
     })
 
 @jwt_required
@@ -385,3 +387,35 @@ def sheet_contratos_detail(request, sheet_id):
         'workspace': workspace,
     }
     return render(request, 'sheet/contratos_detail.html', context)
+
+@jwt_required
+def sheet_produtos_detail(request, sheet_id):
+    """Tela específica de produtos para uma planilha do tipo 'produtos'."""
+    from sheets.models import Sheet
+    sheet = Sheet.objects.filter(id=sheet_id).select_related('board__workspace').first()
+    if not sheet:
+        return redirect('workspace')
+    board = sheet.board
+    workspace = board.workspace if board else None
+    context = {
+        'sheet': sheet,
+        'board': board,
+        'workspace': workspace,
+    }
+    return render(request, 'sheet/produtos_detail.html', context)
+
+@jwt_required
+def sheet_colaboradores_detail(request, sheet_id):
+    """Tela específica de colaboradores para uma planilha do tipo 'colaboradores'."""
+    from sheets.models import Sheet
+    sheet = Sheet.objects.filter(id=sheet_id).select_related('board__workspace').first()
+    if not sheet:
+        return redirect('workspace')
+    board = sheet.board
+    workspace = board.workspace if board else None
+    context = {
+        'sheet': sheet,
+        'board': board,
+        'workspace': workspace,
+    }
+    return render(request, 'sheet/colaboradores_detail.html', context)

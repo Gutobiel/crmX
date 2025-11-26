@@ -563,6 +563,16 @@
     <script type="module">
         import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
 
+        // Escopo: todas operações vinculadas à planilha atual
+        let SHEET_ID = Number('{{ sheet.id|default:"" }}') || null;
+        // Fallback: extrai da URL /sheet/<id>/contratos/
+        if (!SHEET_ID) {
+            const m = window.location.pathname.match(/\/sheet\/(\d+)\/contratos\//);
+            if (m) {
+                SHEET_ID = Number(m[1]);
+            }
+        }
+
         const API_SUBELEMENTS = '/api/v1/contratos-subelements/';
         const API_CONTRATOS = '/api/v1/contratos/';
 
@@ -606,7 +616,7 @@
 
             try {
                 const headers = await getAuthHeaders();
-                const response = await fetch(`${API_SUBELEMENTS}?element=${contractId}`, { headers });
+                const response = await fetch(`${API_SUBELEMENTS}?element=${contractId}&sheet=${SHEET_ID}`, { headers });
 
                 if (!response.ok) throw new Error('Erro ao carregar subelementos');
 
@@ -741,7 +751,7 @@
 
             try {
                 const headers = await getAuthHeaders();
-                const response = await fetch(`${API_SUBELEMENTS}${subelementId}/`, {
+                const response = await fetch(`${API_SUBELEMENTS}${subelementId}/?sheet=${SHEET_ID}`, {
                     method: 'DELETE',
                     headers
                 });
@@ -967,6 +977,7 @@
                     method: 'POST',
                     headers,
                     body: JSON.stringify({
+                        sheet: SHEET_ID,
                         empresa: empresa,
                         objeto: objeto,
                         status: status,
@@ -1223,6 +1234,7 @@
                     method: 'POST',
                     headers,
                     body: JSON.stringify({
+                        sheet: SHEET_ID,
                         empresa: empresa,
                         objeto: objeto,
                         status: status,

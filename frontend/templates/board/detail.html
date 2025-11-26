@@ -272,10 +272,14 @@
                 <i class="fas fa-table"></i> Planilhas
                 <span class="sheet-card-type" style="background:#f0f1f7; color:#333781;">{{ sheets.count }}</span>
             </h2>
-            <a class="btn-primary" href="/sheet/new/?board={{ board.id }}" id="btnNewSheet">
-                <i class="fas fa-plus"></i>
-                Nova Planilha
-            </a>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="text" id="sheetSearch" placeholder="Pesquisar planilhas..." 
+                       style="padding:8px 12px; border:1px solid #e1e5e9; border-radius:8px; font-size:13px;">
+                <a class="btn-primary" href="/sheet/tipo/planilha/?board={{ board.id }}" id="btnNewSheet">
+                    <i class="fas fa-plus"></i>
+                    Nova Planilha
+                </a>
+            </div>
         </div>
 
         {% if sheets %}
@@ -289,11 +293,20 @@
                         <p class="sheet-card-desc">{{ sheet.descricao|default:"Sem descrição cadastrada." }}</p>
                         <div class="sheet-card-meta">
                             <span>Criada {{ sheet.created_at|date:'d/m/Y' }}</span>
-                            <span>Atualizada {{ sheet.updated_at|date:'d/m/Y' }}</span>
+                            <span>Atualizada {{ sheet.updated_at|timesince }} atrás</span>
                         </div>
                         <div class="sheet-card-footer">
                                 <a class="sheet-card-btn" href="{% url 'sheet_detail' sheet.id %}">
                                     <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a class="sheet-card-btn" href="/sheet/{{ sheet.id }}/contratos/" style="margin-left:8px; background:#28a745;">
+                                    <i class="fas fa-file-contract"></i> Contratos
+                                </a>
+                                <a class="sheet-card-btn" href="/sheet/{{ sheet.id }}/produtos/" style="margin-left:8px; background:#17a2b8;">
+                                    <i class="fas fa-boxes"></i> Produtos
+                                </a>
+                                <a class="sheet-card-btn" href="/sheet/{{ sheet.id }}/colaboradores/" style="margin-left:8px; background:#6f42c1;">
+                                    <i class="fas fa-user-friends"></i> Colaboradores
                                 </a>
                         </div>
                     </div>
@@ -354,5 +367,61 @@
             alert('Erro ao excluir pasta');
         }
     };
+
+    // Pesquisa de planilhas por nome
+    (function(){
+        const searchInput = document.getElementById('sheetSearch');
+        const cards = Array.from(document.querySelectorAll('.sheet-card'));
+        const getTitle = (card) => card.querySelector('.sheet-card-title')?.textContent.trim().toLowerCase() || '';
+        searchInput?.addEventListener('input', function(){
+            const q = this.value.trim().toLowerCase();
+            cards.forEach(card => {
+                const match = getTitle(card).includes(q);
+                card.style.display = match ? '' : 'none';
+            });
+        });
+    })();
+
+    // Fallback: carregar planilhas via API quando não renderizadas server-side
+    (async function(){
+        const grid = document.querySelector('.sheets-grid');
+        const empty = document.querySelector('.sheet-card-empty');
+        if (grid && grid.children.length > 0) return; // já renderizado
+        try {
+            const { getAuthHeaders } = await import('{% static "js/api/auth.js" %}');
+            const headers = await getAuthHeaders();
+            const boardId = parseInt('{{ board.id }}', 10);
+            const res = await fetch(`/api/v1/sheet/?board=${boardId}`, { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!Array.isArray(data) || data.length === 0) return;
+            // criar grid se não existir
+            let targetGrid = grid;
+            if (!targetGrid) {
+                targetGrid = document.createElement('div');
+                targetGrid.className = 'sheets-grid';
+                empty?.insertAdjacentElement('beforebegin', targetGrid);
+                empty?.remove();
+            }
+            targetGrid.innerHTML = data.map(s => `
+                <div class="sheet-card">
+                    <div class="sheet-card-header">
+                        <h3 class="sheet-card-title">${s.nome || 'Sem nome'}</h3>
+                    </div>
+                    <p class="sheet-card-desc">${s.descricao || 'Sem descrição cadastrada.'}</p>
+                    <div class="sheet-card-meta">
+                        <span>Criada ${(s.created_at || '').slice(0,10)}</span>
+                        <span>Atualizada ${(s.updated_at || '').slice(0,10)}</span>
+                    </div>
+                    <div class="sheet-card-footer">
+                        <a class="sheet-card-btn" href="/sheet/${s.id}/"><i class="fas fa-edit"></i> Editar</a>
+                        <a class="sheet-card-btn" href="/sheet/${s.id}/contratos/" style="margin-left:8px; background:#28a745;"><i class="fas fa-file-contract"></i> Contratos</a>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            console.warn('Falha ao carregar planilhas via API', e);
+        }
+    })();
 </script>
 {% endblock %}

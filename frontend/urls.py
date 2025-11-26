@@ -18,6 +18,7 @@ urlpatterns = [
     path('workspace/<int:workspace_id>/board/<int:board_id>/', views.board_detail, name='board_detail'),
 
     path('sheet/new/', views.new_sheet, name='new_sheet'),
+    path('sheet/tipo/planilha/', views.sheet_tipo_select, name='sheet_tipo_select'),
     path('sheet/<int:sheet_id>/', views.sheet_detail, name='sheet_detail'),
     path('sheet/<int:sheet_id>/contratos/', views.sheet_contratos_detail, name='sheet_contratos_detail'),
     path('sheet/<int:sheet_id>/produtos/', views.sheet_produtos_detail, name='sheet_produtos_detail'),

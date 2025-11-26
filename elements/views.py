@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser, DjangoModelPermissions, IsAuthenticated
 from .filters import ElementFilterClass
 
@@ -32,11 +33,11 @@ class ContratosElementViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        # Se sheet for fornecido, usar ele; senão usar board (retrocompatibilidade)
-        if 'sheet' in self.request.data and not self.request.data.get('board'):
-            serializer.save()
-        else:
-            serializer.save()
+        # Exige sempre o campo 'sheet' para criação de contratos
+        sheet_id = self.request.data.get('sheet')
+        if not sheet_id:
+            raise ValidationError({'sheet': 'Este campo é obrigatório para contratos.'})
+        serializer.save()
 
 
 class ElementCollaboratorViewSet(viewsets.ModelViewSet):

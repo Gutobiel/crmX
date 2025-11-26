@@ -226,19 +226,19 @@
     
     const boardId = "{{ board.id }}";
     const boardDetailUrl = "{% url 'board_detail' workspace.id board.id %}";
-    const selectTipoUrl = "{% url 'sheet_tipo_select' %}";
-    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}";
-    const sheetDetail2Url = "{% url 'sheet_detail2' %}"; // usa querystring ?sheet=
-    const sheetContratosDetailUrlTemplate = "{% url 'sheet_contratos_detail' 0 %}";
-    const sheetProdutosDetailUrlTemplate = "{% url 'sheet_produtos_detail' 0 %}";
-    const sheetColaboradoresDetailUrlTemplate = "{% url 'sheet_colaboradores_detail' 0 %}";
-    const params = new URLSearchParams(window.location.search);
-    const tipoParam = params.get('tipo');
+    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}"; // detalhe genérico (redirecionamento único agora)
+    let selectedTipo = null;
 
-    // Se não houver tipo definido via query, volta para a seleção
-    if (!tipoParam) {
-        const redirectUrl = `${selectTipoUrl}?board=${encodeURIComponent(boardId)}`;
-        window.location.replace(redirectUrl);
+    // Seleção de template
+    function initTemplateSelection() {
+        const cards = document.querySelectorAll('.template-card');
+        cards.forEach(card => {
+            card.addEventListener('click', function() {
+                cards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedTipo = this.dataset.tipo;
+            });
+        });
     }
 
     // Cancelar
@@ -285,24 +285,10 @@
                 }
                 
                 const sheet = await response.json();
-                // Redireciona para a página de edição conforme o tipo escolhido
-                let targetUrl = sheetDetailUrlTemplate;
-                if (tipoParam === 'contratos') {
-                    targetUrl = sheetContratosDetailUrlTemplate;
-                } else if (tipoParam === 'produtos') {
-                    targetUrl = sheetProdutosDetailUrlTemplate;
-                } else if (tipoParam === 'colaboradores') {
-                    targetUrl = sheetColaboradoresDetailUrlTemplate;
-                } else if (tipoParam === 'generico') {
-                    // detail2 usa querystring
-                    window.location.href = `${sheetDetail2Url}?sheet=${encodeURIComponent(sheet.id)}`;
-                    return;
-                } else {
-                    // fallback: genérico
-                    window.location.href = `${sheetDetail2Url}?sheet=${encodeURIComponent(sheet.id)}`;
-                    return;
-                }
-                window.location.href = targetUrl.replace('/0/', `/${sheet.id}/`);
+                alert('Planilha criada com sucesso!');
+
+                // Redireciona sempre para a página de detalhe genérica
+                window.location.href = sheetDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao criar planilha: ' + error.message);
@@ -312,6 +298,7 @@
 
     // Inicializar
     document.addEventListener('DOMContentLoaded', function() {
+        initTemplateSelection();
         initFormSubmit();
     });
 </script>

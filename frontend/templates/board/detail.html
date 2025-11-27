@@ -296,18 +296,23 @@
                             <span>Atualizada {{ sheet.updated_at|timesince }} atrás</span>
                         </div>
                         <div class="sheet-card-footer">
+                            {% if sheet.template_type == 'contratos' %}
+                                <a class="sheet-card-btn" href="{% url 'sheet_contratos_detail' sheet.id %}">
+                                    <i class="fas fa-file-contract"></i> Abrir contratos
+                                </a>
+                            {% elif sheet.template_type == 'produtos' %}
+                                <a class="sheet-card-btn" href="{% url 'sheet_produtos_detail' sheet.id %}">
+                                    <i class="fas fa-boxes"></i> Abrir produtos
+                                </a>
+                            {% elif sheet.template_type == 'colaboradores' %}
+                                <a class="sheet-card-btn" href="{% url 'sheet_colaboradores_detail' sheet.id %}">
+                                    <i class="fas fa-user-friends"></i> Abrir colaboradores
+                                </a>
+                            {% else %}
                                 <a class="sheet-card-btn" href="{% url 'sheet_detail' sheet.id %}">
-                                    <i class="fas fa-edit"></i> Editar
+                                    <i class="fas fa-file-alt"></i> Abrir planilha
                                 </a>
-                                <a class="sheet-card-btn" href="/sheet/{{ sheet.id }}/contratos/" style="margin-left:8px; background:#28a745;">
-                                    <i class="fas fa-file-contract"></i> Contratos
-                                </a>
-                                <a class="sheet-card-btn" href="/sheet/{{ sheet.id }}/produtos/" style="margin-left:8px; background:#17a2b8;">
-                                    <i class="fas fa-boxes"></i> Produtos
-                                </a>
-                                <a class="sheet-card-btn" href="/sheet/{{ sheet.id }}/colaboradores/" style="margin-left:8px; background:#6f42c1;">
-                                    <i class="fas fa-user-friends"></i> Colaboradores
-                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
@@ -382,11 +387,12 @@
         });
     })();
 
-    // Fallback: carregar planilhas via API quando não renderizadas server-side
+    // Fallback: carrega planilhas via API apenas deste board quando não renderizadas server-side
     (async function(){
         const grid = document.querySelector('.sheets-grid');
         const empty = document.querySelector('.sheet-card-empty');
-        if (grid && grid.children.length > 0) return; // já renderizado
+        // Se já temos cards renderizados no server, não faz fallback
+        if (grid && grid.querySelector('.sheet-card')) return;
         try {
             const { getAuthHeaders } = await import('{% static "js/api/auth.js" %}');
             const headers = await getAuthHeaders();
@@ -414,8 +420,15 @@
                         <span>Atualizada ${(s.updated_at || '').slice(0,10)}</span>
                     </div>
                     <div class="sheet-card-footer">
-                        <a class="sheet-card-btn" href="/sheet/${s.id}/"><i class="fas fa-edit"></i> Editar</a>
-                        <a class="sheet-card-btn" href="/sheet/${s.id}/contratos/" style="margin-left:8px; background:#28a745;"><i class="fas fa-file-contract"></i> Contratos</a>
+                        ${
+                            s.template_type === 'contratos'
+                                ? `<a class=\"sheet-card-btn\" href=\"/sheet/${s.id}/contratos/\"><i class=\\\"fas fa-file-contract\\\"></i> Abrir contratos</a>`
+                                : s.template_type === 'produtos'
+                                    ? `<a class=\"sheet-card-btn\" href=\"/sheet/${s.id}/produtos/\"><i class=\\\"fas fa-boxes\\\"></i> Abrir produtos</a>`
+                                    : s.template_type === 'colaboradores'
+                                        ? `<a class=\"sheet-card-btn\" href=\"/sheet/${s.id}/colaboradores/\"><i class=\\\"fas fa-user-friends\\\"></i> Abrir colaboradores</a>`
+                                        : `<a class=\"sheet-card-btn\" href=\"/sheet/${s.id}/\"><i class=\\\"fas fa-file-alt\\\"></i> Abrir planilha</a>`
+                        }
                     </div>
                 </div>
             `).join('');

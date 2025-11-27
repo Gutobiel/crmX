@@ -16,6 +16,7 @@ urlpatterns = [
     path('board/', views.new_board, name='board'),
     path('board/new/', views.new_board, name='new_board'),
     path('workspace/<int:workspace_id>/board/<int:board_id>/', views.board_detail, name='board_detail'),
+    path('workspace/<int:workspace_id>/board/<int:board_id>/sheets/', views.board_sheets, name='board_sheets'),
 
     path('sheet/new/', views.new_sheet, name='new_sheet'),
     path('sheet/tipo/planilha/', views.sheet_tipo_select, name='sheet_tipo_select'),

@@ -245,35 +245,53 @@ def workspace_detail(request, workspace_id):
 
 @jwt_required
 def board_detail(request, workspace_id, board_id):
-    """Renderiza a página de detalhe de uma pasta específica (planilha)."""
+    """Renderiza a página de detalhe de uma pasta específica com listagem de planilhas do próprio board."""
     from boards.models import Board
     from sheets.models import Sheet
-    
+
     board = Board.objects.filter(id=board_id, workspace_id=workspace_id).select_related('workspace').first()
     if not board:
-        # Se o workspace existir, redireciona para a listagem dele; caso contrário, volta para a página geral
         workspace_exists = Workspace.objects.filter(id=workspace_id).exists()
         if workspace_exists:
             return redirect('workspace_detail', workspace_id=workspace_id)
         return redirect('workspace')
-    
-    # Buscar planilhas do board
+
     sheets = Sheet.objects.filter(board=board).order_by('-created_at')
-    # 'tipo' foi removido do modelo Sheet nas migrações recentes; não inclua no values
     debug_sheet_values = list(sheets.values('id', 'nome', 'board_id'))
-    
-    # Debug
+
+    # Logs de debug (podem ser removidos depois)
     print(f"DEBUG board_detail: Board ID={board.id}, Nome={board.nome}")
     print(f"DEBUG board_detail: Total de planilhas encontradas: {sheets.count()}")
     for sheet in sheets:
-        print(f"  - Sheet ID {sheet.id}: {sheet.nome}")
-    
+        print(f"  - Sheet ID {sheet.id}: {sheet.nome} (board_id={sheet.board_id})")
+
     return render(request, 'board/detail.html', {
         'board': board,
         'workspace': board.workspace,
         'sheets': sheets,
         'workspace_id': workspace_id,
         'sheets_debug_values': debug_sheet_values,
+    })
+
+@jwt_required
+def board_sheets(request, workspace_id, board_id):
+    """Página dedicada para listar planilhas de uma pasta específica."""
+    from boards.models import Board
+    from sheets.models import Sheet
+
+    board = Board.objects.filter(id=board_id, workspace_id=workspace_id).select_related('workspace').first()
+    if not board:
+        workspace_exists = Workspace.objects.filter(id=workspace_id).exists()
+        if workspace_exists:
+            return redirect('workspace_detail', workspace_id=workspace_id)
+        return redirect('workspace')
+
+    sheets = Sheet.objects.filter(board=board).order_by('-created_at')
+
+    return render(request, 'board/sheets.html', {
+        'board': board,
+        'workspace': board.workspace,
+        'sheets': sheets,
     })
 
 @jwt_required
@@ -307,21 +325,76 @@ def sheet_tipo_select(request):
         'board': board,
         'workspace': board.workspace if board else None,
     }
-    return render(request, 'sheet/new_contrato.html', context)
+    return render(request, 'sheet/SelecaoNewModelo.html', context)
 
 @jwt_required
 def sheet_detail(request, sheet_id):
     """Renderiza a página de detalhe/edição de uma planilha."""
     from sheets.models import Sheet
+    from boards.models import Board
+    from elements.models import ContratosElement
+    from elements.forms import ContratosElementForm
+    from django.forms import HiddenInput
 
     sheet = Sheet.objects.filter(id=sheet_id).select_related('board__workspace').first()
+    if not sheet:
+        return render(request, 'sheet/detail.html', {
+            'sheet': None,
+            'board': None,
+            'workspace': None,
+            'contratos': [],
+            'form': ContratosElementForm(),
+            'can_add_contrato': False,
+            'show_board_field': True,
+            'show_sheet_field': True,
+        })
+
+    board = sheet.board
+    workspace = board.workspace if board else None
+
+    # Lista contratos vinculados apenas à planilha atual
+    contratos_qs = ContratosElement.objects.filter(sheet_id=sheet.id).order_by('id')
+
+    # Prepara formulário com contexto fixo para a planilha atual
+    initial = {
+        'sheet': sheet,
+        'board': board,
+    }
+
+    if request.method == 'POST':
+        form = ContratosElementForm(request.POST, initial=initial)
+    else:
+        form = ContratosElementForm(initial=initial)
+
+    # Limita seleção de planilhas ao board atual e oculta campos
+    form.fields['sheet'].queryset = Sheet.objects.select_related('board').filter(board=board).order_by('nome')
+    form.fields['board'].queryset = Board.objects.filter(id=board.id)
+
+    # Oculta campos porque estamos em uma página de planilha específica
+    form.fields['sheet'].widget = HiddenInput()
+    form.fields['board'].widget = HiddenInput()
+
+    if request.method == 'POST' and form.is_valid():
+        # Garante vínculo com a planilha atual
+        contrato = form.save(commit=False)
+        contrato.sheet = sheet
+        contrato.board = board
+        contrato.save()
+        return redirect('sheet_detail', sheet_id=sheet.id)
+
+    available_targets = True  # sempre disponível na página da planilha
 
     context = {
         'sheet': sheet,
-        'board': sheet.board,
-        'workspace': sheet.board.workspace,
+        'board': board,
+        'workspace': workspace,
+        'contratos': contratos_qs,
+        'form': form,
+        'can_add_contrato': available_targets,
+        'show_board_field': False,
+        'show_sheet_field': False,
     }
-    return render(request,'sheet/detail.html', context)
+    return render(request, 'sheet/detail.html', context)
 
 def logout_view(request):
     # Para JWT, apenas limpar cookies no cliente já é suficiente.

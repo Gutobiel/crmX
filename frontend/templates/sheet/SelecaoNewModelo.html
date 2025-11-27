@@ -17,6 +17,23 @@
   .actions-bar {margin-top:32px;display:flex;justify-content:flex-end}
   .btn-cancel {padding:12px 30px;background:#6c757d;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
   .btn-cancel:hover {background:#555d63}
+
+  /* DESABILITAR ITEM */
+    .template-link.disabled {
+    background:#f1f1f1;
+    color:#999;
+    border-color:#ddd;
+    cursor:not-allowed;
+    pointer-events:none; /* impede clique */
+  }
+  .template-link.disabled i {
+    color:#bbb;
+  }
+  .template-link.disabled:hover {
+    box-shadow:none;
+    transform:none;
+    background:#f1f1f1;
+  }
 </style>
 {% endblock %}
 
@@ -49,15 +66,15 @@
       <span>Contratos</span>
       <div class="template-desc">Gestão de contratos e itens vinculados.</div>
     </a>
-    <a class="template-link" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=colaboradores">
+    <a class="template-link disabled" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=colaboradores">
       <i class="fas fa-users"></i>
       <span>Colaboradores</span>
-      <div class="template-desc">Organização de pessoas e cargos.</div>
+      <div class="template-desc">Em breve: Organização de pessoas e cargos.</div>
     </a>
-    <a class="template-link" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=produtos">
+    <a class="template-link disabled" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=produtos">
       <i class="fas fa-box"></i>
       <span>Produtos</span>
-      <div class="template-desc">Catálogo e detalhes de produtos.</div>
+      <div class="template-desc">Em breve: Catálogo e detalhes de produtos.</div>
     </a>
     {% else %}
     <div style="grid-column: 1/-1; color:#666;">Informe um board pela URL (?board=ID) para criar a planilha associada.</div>

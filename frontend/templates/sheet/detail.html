@@ -373,10 +373,14 @@
 {% block breadcrumb %}
     <div class="sheet-breadcrumb">
         <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
-        <i class="fas fa-chevron-right"></i>
-        <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
-        <i class="fas fa-chevron-right"></i>
-        <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
+        {% if workspace %}
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
+        {% endif %}
+        {% if board %}
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
+        {% endif %}
         <i class="fas fa-chevron-right"></i>
         <span>{{ sheet.nome }}</span>
     </div>

@@ -325,7 +325,7 @@ def sheet_tipo_select(request):
         'board': board,
         'workspace': board.workspace if board else None,
     }
-    return render(request, 'sheet/new_contrato.html', context)
+    return render(request, 'sheet/SelecaoNewModelo.html', context)
 
 @jwt_required
 def sheet_detail(request, sheet_id):

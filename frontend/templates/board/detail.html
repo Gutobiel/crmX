@@ -283,13 +283,23 @@
         </div>
 
         {% if sheets %}
-            <div style="margin-bottom:10px; font-size:12px; color:#888;">Debug Sheets Count: {{ sheets|length }}</div>
             <div class="sheets-grid">
                 {% for sheet in sheets %}
                     <div class="sheet-card">
                         <div class="sheet-card-header">
-                            <h3 class="sheet-card-title">{{ sheet.nome }}</h3>
-                        </div>
+    <h3 class="sheet-card-title">{{ sheet.nome }}</h3>
+    <span class="sheet-card-type">
+        {% if sheet.template_type == 'contratos' %}
+            Contratos
+        {% elif sheet.template_type == 'produtos' %}
+            Produtos
+        {% elif sheet.template_type == 'colaboradores' %}
+            Colaboradores
+        {% else %}
+            Genérico
+        {% endif %}
+    </span>
+</div>
                         <p class="sheet-card-desc">{{ sheet.descricao|default:"Sem descrição cadastrada." }}</p>
                         <div class="sheet-card-meta">
                             <span>Criada {{ sheet.created_at|date:'d/m/Y' }}</span>

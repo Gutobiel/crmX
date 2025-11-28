@@ -16,8 +16,23 @@ class Sheet(NotesMixin, TimestampMixin, models.Model):
 
     descricao = models.TextField(
         blank=True,
-        default='',
+        null=True,
+        default='Nenhuma descrição definida',
         verbose_name='Descrição'
+    )
+
+    TEMPLATE_CHOICES = (
+        ('generico', 'Genérico'),
+        ('contratos', 'Contratos'),
+        ('colaboradores', 'Colaboradores'),
+        ('produtos', 'Produtos'),
+    )
+
+    template_type = models.CharField(
+        max_length=20,
+        choices=TEMPLATE_CHOICES,
+        default='generico',
+        verbose_name='Tipo de Planilha'
     )
 
     class Meta:

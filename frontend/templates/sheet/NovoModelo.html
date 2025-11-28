@@ -199,12 +199,12 @@
                     placeholder="Digite o nome da planilha"
                     required>
             </div>
-            <label class="form-label" for="sheetDescription">Descrição da Planilha</label>
+            <div class="form-group">
+                <label class="form-label" for="sheetDescription">Descrição da Planilha</label>
                 <textarea 
                     id="sheetDescription" 
                     class="form-input" 
-                    placeholder="Digite a descrição da planilha">
-                </textarea>
+                    placeholder="Digite a descrição da planilha"></textarea>
             </div>
 
             <div style="margin-top:10px; padding:12px; background:#f8f9ff; border:1px solid #e1e5e9; border-radius:6px; font-size:13px; color:#444;">
@@ -227,7 +227,9 @@
     const boardId = "{{ board.id }}";
     const boardDetailUrl = "{% url 'board_detail' workspace.id board.id %}";
     const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}"; // detalhe genérico (redirecionamento único agora)
-    let selectedTipo = null;
+    
+    const params = new URLSearchParams(window.location.search);
+    let selectedTipo = params.get('tipo') || 'generico';
 
     // Seleção de template
     function initTemplateSelection() {
@@ -257,19 +259,22 @@
             e.preventDefault();
 
             const nome = document.getElementById('sheetName').value;
-            
+            const descricao = document.getElementById('sheetDescription').value;
+
             if (!nome.trim()) {
                 alert('Por favor, insira um nome para a planilha');
                 return;
             }
-            
+
             try {
                 const headers = await getAuthHeaders();
                 const payload = {
                     board: parseInt(boardId),
-                    nome: nome
+                    nome: nome,
+                    descricao: descricao,
+                    template_type: selectedTipo || 'generico',
                 };
-                
+
                 const response = await fetch('/api/v1/sheet/', {
                     method: 'POST',
                     headers: {
@@ -278,16 +283,14 @@
                     },
                     body: JSON.stringify(payload)
                 });
-                
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.detail || 'Erro ao criar planilha');
                 }
-                
+
                 const sheet = await response.json();
                 alert('Planilha criada com sucesso!');
-
-                // Redireciona sempre para a página de detalhe genérica
                 window.location.href = sheetDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
             } catch (error) {
                 console.error('Erro:', error);

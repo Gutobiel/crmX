@@ -267,7 +267,8 @@
                 const headers = await getAuthHeaders();
                 const payload = {
                     board: parseInt(boardId),
-                    nome: nome
+                    nome: nome,
+                    template_type: tipoParam || 'generico',
                 };
                 
                 const response = await fetch('/api/v1/sheet/', {

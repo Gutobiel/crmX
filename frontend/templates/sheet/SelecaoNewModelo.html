@@ -56,10 +56,10 @@
   <h1 class="selector-title">Escolha o tipo de planilha</h1>
   <div class="template-grid">
     {% if board %}
-    <a class="template-link" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=generico">
+    <a class="template-link disabled" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=generico">
       <i class="fas fa-table"></i>
       <span>Genérico</span>
-      <div class="template-desc">Estrutura livre e personalizável.</div>
+      <div class="template-desc">Em breve: Estrutura livre e personalizável.</div>
     </a>
     <a class="template-link" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=contratos">
       <i class="fas fa-file-contract"></i>

@@ -328,6 +328,15 @@
             background: #333781;
             color: white;
         }
+        /* Toolbar layout to keep buttons on one line */
+        .toolbar { display:flex; justify-content:space-between; align-items:center; }
+        .toolbar-right { display:flex; gap:10px; align-items:center; flex-wrap: nowrap; }
+        /* Auditoria para excluir pastas (boards) nesta página */
+        .btn-action.btn-audit { background:#f4f5f7; color:#333; border:1px solid #e1e5e9; padding:8px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+        .btn-action.btn-audit.active { background:#333781; color:#fff; }
+        .workspace-card.audit-on { padding-bottom:60px; position:relative; }
+        .btn-delete-board { background:#fff; border:1px solid #e1e5e9; color:#c62828; padding:6px 10px; border-radius:6px; cursor:pointer; display:none; align-items:center; gap:4px; transition:.2s; position:absolute; bottom:12px; right:12px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+        .audit-on .btn-delete-board { display:flex; }
     </style>
 {% endblock %}
 
@@ -386,6 +395,7 @@
     </div>
 
     <!-- Board Header -->
+    <!-- 
     <div class="board-header">
         <div class="board-title">
             <div class="board-actions">
@@ -399,8 +409,8 @@
                 </button>
             </div>
         </div>
-    </div>
-
+    </div> 
+    -->
     <!-- Modal Adicionar Membro -->
     <div id="addMemberModal" class="modal" style="display:none;">
         <div class="modal-content" style="max-width: 600px;">
@@ -467,6 +477,12 @@
                 <i class="fas fa-folder-plus"></i>
                 Nova Pasta
             </a>
+            {% if is_owner %}
+            <button id="auditToggleBoards" class="btn-action btn-audit" title="Habilitar edição/auditoria">
+                <i class="fas fa-shield-alt"></i>
+                Auditoria
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -487,6 +503,9 @@
                         <span>Criado: {{ board.created_at|date:'d/m/Y' }}</span>
                     </div>
                 </div>
+                {% if is_owner %}
+                <button class="btn-delete-board" data-board-id="{{ board.id }}" title="Excluir pasta"><i class="fas fa-trash"></i> Excluir pasta</button>
+                {% endif %}
             </div>
             {% endfor %}
         {% else %}
@@ -1035,5 +1054,64 @@
             }
         });
     }
+</script>
+<script>
+// Auditoria para excluir pastas (boards) nesta página
+document.addEventListener('DOMContentLoaded', function() {
+    const auditToggle = document.getElementById('auditToggleBoards');
+    const grid = document.querySelector('.workspace-grid');
+    let auditBoards = false;
+
+    if (auditToggle) {
+        auditToggle.addEventListener('click', () => {
+            auditBoards = !auditBoards;
+            auditToggle.classList.toggle('active', auditBoards);
+            auditToggle.innerHTML = auditBoards 
+                ? '<i class="fas fa-shield-alt"></i> Auditoria ON'
+                : '<i class="fas fa-shield-alt"></i> Auditoria';
+            document.querySelectorAll('.workspace-card').forEach(card => {
+                card.classList.toggle('audit-on', auditBoards);
+            });
+        });
+    }
+
+    if (grid) {
+        grid.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-delete-board');
+            if (!btn) return;
+            if (!auditBoards) return;
+            const id = btn.getAttribute('data-board-id');
+            if (!id) return;
+            if (!confirm('Tem certeza que deseja excluir esta pasta? Esta ação é permanente.')) return;
+            btn.disabled = true;
+            const prev = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const mod = await import('{% static "js/api/auth.js" %}');
+                const headers = await mod.getAuthHeaders();
+                headers['Accept'] = 'application/json';
+                const resp = await fetch(`/api/v1/board/${id}/`, {
+                    method: 'DELETE',
+                    headers
+                });
+                if (resp.status === 204 || resp.status === 200) {
+                    const card = btn.closest('.workspace-card');
+                    card?.remove();
+                } else {
+                    const txt = await resp.text();
+                    console.error('Delete board failed:', txt);
+                    alert('Falha ao excluir pasta.');
+                    btn.disabled = false;
+                    btn.innerHTML = prev;
+                }
+            } catch (err) {
+                console.error('Erro ao excluir pasta', err);
+                alert('Erro de rede ao excluir.');
+                btn.disabled = false;
+                btn.innerHTML = prev;
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

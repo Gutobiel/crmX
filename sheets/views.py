@@ -17,4 +17,12 @@ class SheetViewSet(viewsets.ModelViewSet):
         board_id = self.request.query_params.get("board")
         if board_id:
             queryset = queryset.filter(board_id=board_id)
-        return queryset.prefetch_related('columns', 'rows')
+        # Evita prefetch em ações como destroy/create, que não precisam carregar relações
+        # e podem falhar se as relações ainda não existem
+        if getattr(self, 'action', None) in ['list', 'retrieve']:
+            try:
+                return queryset.prefetch_related('columns', 'rows')
+            except Exception:
+                # Fallback caso relações não existam
+                return queryset
+        return queryset

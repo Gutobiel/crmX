@@ -8,6 +8,15 @@ class SubElementSerializer(serializers.ModelSerializer):
 
 
 class ContratosSubelementSerializer(serializers.ModelSerializer):
+    valor_total = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+    valor_unitario_reajustado = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+    valor_total_reajustado = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+
     class Meta:
         model = ContratosSubelement
         fields = '__all__'
+        read_only_fields = (
+            'valor_total',
+            'valor_unitario_reajustado',
+            'valor_total_reajustado',
+        )

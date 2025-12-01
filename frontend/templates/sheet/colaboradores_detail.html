@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ sheet.nome }} - Colaboradores{% endblock %}
+
+{% block page_title %}{{ sheet.nome }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="sheet-breadcrumb">
+    <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>{{ sheet.nome }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="sheet-header" style="background:#fff; padding:24px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:24px;">
+    <h1 style="margin:0; font-size:26px; color:#302754;">Colaboradores</h1>
+    <p style="margin-top:8px; color:#666; font-size:14px;">Modelo de colaboradores - em construção.</p>
+</div>
+<div style="background:#fff; padding:32px; border-radius:12px; text-align:center; border:1px dashed #d7dcf0;">
+    <i class="fas fa-users" style="font-size:48px; color:#c5c9d8; margin-bottom:16px;"></i>
+    <p style="color:#555; font-size:15px;">Em breve: gestão de colaboradores e benefícios nesta planilha.</p>
+</div>
+{% endblock %}

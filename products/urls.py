@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import ProductViewSet
 
 router = DefaultRouter()
-router.register('sheet', ProductViewSet)
+router.register('product', ProductViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

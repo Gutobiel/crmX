@@ -49,6 +49,19 @@ def jwt_required(view_func):
 def login_view(request):
     return render(request, 'login/login.html')
 
+def root(request):
+    # Se houver token nos cookies ou Authorization, tenta ir para home; senão, login
+    auth_header = request.headers.get('Authorization')
+    token = None
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+    else:
+        token = request.COOKIES.get('access_token') or request.COOKIES.get('access')
+
+    if token:
+        return redirect('home')
+    return redirect('login')
+
 @jwt_required
 def home(request):
     # Carregar todos os contratos para a página home

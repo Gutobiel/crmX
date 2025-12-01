@@ -3,10 +3,8 @@ from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
-    # Quando acessar a raiz do site, redireciona para a página de login
-    path('', RedirectView.as_view(url='/login/', permanent=False), name='root-redirect'),
+    path('', RedirectView.as_view(url='/home/', permanent=False), name='root-redirect'),
     path('login/', views.login_view, name='login'),
-
     path('home/', views.home, name='home'),
 
     path('workspace/', views.workspace, name='workspace'),

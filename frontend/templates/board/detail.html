@@ -462,9 +462,9 @@
             targetGrid.innerHTML = data.map(s => `
                 <div class="sheet-card">
                     <div class="sheet-card-header">
-                        <h3 class="sheet-card-title">${s.nome || 'Sem nome'}</h3>
+                        <h3 class="sheet-card-title">${sheet.nome || 'Sem nome'}</h3>
                     </div>
-                    <p class="sheet-card-desc">${s.descricao || 'Sem descrição cadastrada.'}</p>
+                    <p class="sheet-card-desc">${sheet.descricao || 'Sem descrição cadastrada.'}</p>
                     <div class="sheet-card-meta">
                         <span>Criada ${(s.created_at || '').slice(0,10)}</span>
                         <span>Atualizada ${(s.updated_at || '').slice(0,10)}</span>

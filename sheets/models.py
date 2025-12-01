@@ -16,8 +16,6 @@ class Sheet(NotesMixin, TimestampMixin, models.Model):
 
     descricao = models.TextField(
         blank=True,
-        null=True,
-        default='Nenhuma descrição definida',
         verbose_name='Descrição'
     )
 

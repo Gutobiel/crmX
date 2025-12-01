@@ -259,7 +259,9 @@
 
 {% block breadcrumb %}
     <div class="board-breadcrumb">
-        <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+        <i class="fas fa-home"></i><a href="/home/" title="Home">Início</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'workspace' %}"></i> Workspaces</a>
         <i class="fas fa-chevron-right"></i>
         <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
         <i class="fas fa-chevron-right"></i>

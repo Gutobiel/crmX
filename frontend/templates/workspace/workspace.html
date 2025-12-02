@@ -1,17 +1,5 @@
-
-<!-- Aqui temos todas as pastas (boards) criadas dentro desta area de trabalho   -->
-<!-- Botão apagar area de trabalho (avisar que esta ação apagara todos os dados incluidos nele) -->
-<!-- Renomear area de trabalho(Titulo) -->
-
-<!-- Participantes e membros -->
-<!-- Adicionar membro, retirar, compatilhar -->
-
-
-
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Áreas de Trabalho{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
@@ -149,14 +137,14 @@
     <div class="board-header">
         <div class="board-title">
             <div class="board-actions">
-                <button class="btn-action" id="filterBtn">
+<!--                 <button class="btn-action" id="filterBtn">
                     <i class="fas fa-filter"></i>
                     Filtrar
                 </button>
                 <button class="btn-action" id="exportBtn">
                     <i class="fas fa-download"></i>
                     Exportar
-                </button>
+                </button> -->
                 <a href="{% url 'new_workspace' %}" class="btn-primary" id="newWorkspaceBtn" title="Nova Área de Trabalho">
                         <i class="fas fa-plus"></i>
                         Nova Área de Trabalho

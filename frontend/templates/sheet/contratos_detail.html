@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Home{% endblock %}
-
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <style>
@@ -176,13 +174,13 @@
             <h2>Estrutura de Contratos</h2>
             <div class="board-actions">
                 <button class="btn-action" id="btnFiltrar" title="Filtros avançados">
-                    <i class="fas fa-filter"></i>
-                    Filtrar
+                    <i class="fa-etch fa-solid fa-comment"></i>
+                   Histórico e Comentários 
                 </button>
-                <button class="btn-action" id="btnExportar" title="Exportar para Excel">
+<!--                 <button class="btn-action" id="btnExportar" title="Exportar para Excel">
                     <i class="fas fa-download"></i>
                     Exportar
-                </button>
+                </button> -->
                 <button class="btn-primary" id="btnNovoContrato">
                     <i class="fas fa-plus"></i>
                     Novo Contrato

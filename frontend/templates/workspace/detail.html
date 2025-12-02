@@ -2,16 +2,8 @@
 <!-- Aqui temos todas as pastas (boards) criadas dentro desta area de trabalho   -->
 <!-- Botão apagar area de trabalho (avisar que esta ação apagara todos os dados incluidos nele) -->
 <!-- Renomear area de trabalho(Titulo) -->
-
-<!-- Participantes e membros -->
-<!-- Adicionar membro, retirar, compatilhar -->
-
-
-
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}{{ workspace.nome }} - Área de Trabalho{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">

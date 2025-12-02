@@ -199,12 +199,12 @@
                     placeholder="Digite o nome da planilha"
                     required>
             </div>
-            <label class="form-label" for="sheetDescription">Descrição da Planilha</label>
+            <div class="form-group">
+                <label class="form-label" for="sheetDescription">Descrição da Planilha</label>
                 <textarea 
                     id="sheetDescription" 
                     class="form-input" 
-                    placeholder="Digite a descrição da planilha">
-                </textarea>
+                    placeholder="Digite a descrição da planilha"></textarea>
             </div>
 
             <div style="margin-top:10px; padding:12px; background:#f8f9ff; border:1px solid #e1e5e9; border-radius:6px; font-size:13px; color:#444;">
@@ -226,19 +226,21 @@
     
     const boardId = "{{ board.id }}";
     const boardDetailUrl = "{% url 'board_detail' workspace.id board.id %}";
-    const selectTipoUrl = "{% url 'sheet_tipo_select' %}";
-    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}";
-    const sheetDetail2Url = "{% url 'sheet_detail2' %}"; // usa querystring ?sheet=
-    const sheetContratosDetailUrlTemplate = "{% url 'sheet_contratos_detail' 0 %}";
-    const sheetProdutosDetailUrlTemplate = "{% url 'sheet_produtos_detail' 0 %}";
-    const sheetColaboradoresDetailUrlTemplate = "{% url 'sheet_colaboradores_detail' 0 %}";
+    const sheetDetailUrlTemplate = "{% url 'sheet_detail' 0 %}"; // detalhe genérico (redirecionamento único agora)
+    
     const params = new URLSearchParams(window.location.search);
-    const tipoParam = params.get('tipo');
+    let selectedTipo = params.get('tipo') || 'generico';
 
-    // Se não houver tipo definido via query, volta para a seleção
-    if (!tipoParam) {
-        const redirectUrl = `${selectTipoUrl}?board=${encodeURIComponent(boardId)}`;
-        window.location.replace(redirectUrl);
+    // Seleção de template
+    function initTemplateSelection() {
+        const cards = document.querySelectorAll('.template-card');
+        cards.forEach(card => {
+            card.addEventListener('click', function() {
+                cards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedTipo = this.dataset.tipo;
+            });
+        });
     }
 
     // Cancelar
@@ -257,20 +259,22 @@
             e.preventDefault();
 
             const nome = document.getElementById('sheetName').value;
-            
+            const descricao = document.getElementById('sheetDescription').value;
+
             if (!nome.trim()) {
                 alert('Por favor, insira um nome para a planilha');
                 return;
             }
-            
+
             try {
                 const headers = await getAuthHeaders();
                 const payload = {
                     board: parseInt(boardId),
                     nome: nome,
-                    template_type: tipoParam || 'generico',
+                    descricao: descricao,
+                    template_type: selectedTipo || 'generico',
                 };
-                
+
                 const response = await fetch('/api/v1/sheet/', {
                     method: 'POST',
                     headers: {
@@ -279,31 +283,15 @@
                     },
                     body: JSON.stringify(payload)
                 });
-                
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.detail || 'Erro ao criar planilha');
                 }
-                
+
                 const sheet = await response.json();
-                // Redireciona para a página de edição conforme o tipo escolhido
-                let targetUrl = sheetDetailUrlTemplate;
-                if (tipoParam === 'contratos') {
-                    targetUrl = sheetContratosDetailUrlTemplate;
-                } else if (tipoParam === 'produtos') {
-                    targetUrl = sheetProdutosDetailUrlTemplate;
-                } else if (tipoParam === 'colaboradores') {
-                    targetUrl = sheetColaboradoresDetailUrlTemplate;
-                } else if (tipoParam === 'generico') {
-                    // detail2 usa querystring
-                    window.location.href = `${sheetDetail2Url}?sheet=${encodeURIComponent(sheet.id)}`;
-                    return;
-                } else {
-                    // fallback: genérico
-                    window.location.href = `${sheetDetail2Url}?sheet=${encodeURIComponent(sheet.id)}`;
-                    return;
-                }
-                window.location.href = targetUrl.replace('/0/', `/${sheet.id}/`);
+                alert('Planilha criada com sucesso!');
+                window.location.href = sheetDetailUrlTemplate.replace('/0/', `/${sheet.id}/`);
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao criar planilha: ' + error.message);
@@ -313,6 +301,7 @@
 
     // Inicializar
     document.addEventListener('DOMContentLoaded', function() {
+        initTemplateSelection();
         initFormSubmit();
     });
 </script>

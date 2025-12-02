@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .sheets-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:20px; }
+  .sheet-card { background:#f8f9ff; border:1px solid #e1e5e9; border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:14px; }
+  .sheet-card-title { margin:0; font-size:16px; font-weight:600; color:#302754; }
+  .sheet-card-footer { display:flex; justify-content:flex-end; }
+  .sheet-card-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; background:#333781; color:#fff; font-size:13px; font-weight:600; text-decoration:none; }
+  .badge { padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600; background:#eef1ff; color:#333781; }
+</style>
+{% endblock %}
+
+{% block page_title %}Planilhas{% endblock %}
+
+{% block breadcrumb %}
+<div class="board-breadcrumb">
+  <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+  {% if workspace %}
+    <i class="fas fa-chevron-right"></i>
+    <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
+  {% endif %}
+  {% if board %}
+    <i class="fas fa-chevron-right"></i>
+    <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
+  {% endif %}
+  <i class="fas fa-chevron-right"></i>
+  <span>Planilhas</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2 style="margin:0; color:#302754;">Planilhas de {{ board.nome }}</h2>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <input type="text" id="sheetSearch" placeholder="Pesquisar planilhas..." style="padding:8px 12px; border:1px solid #e1e5e9; border-radius:8px; font-size:13px;">
+    <a class="btn-primary" href="{% url 'sheet_tipo_select' %}?board={{ board.id }}">
+      <i class="fas fa-plus"></i> Nova Planilha
+    </a>
+  </div>
+</div>
+
+{% if sheets %}
+<div class="sheets-grid" id="sheetsGrid">
+  {% for sheet in sheets %}
+    <div class="sheet-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <h3 class="sheet-card-title">{{ sheet.nome }}</h3>
+        <span class="badge">{{ sheet.template_type|default:'generico' }}</span>
+      </div>
+      <p class="sheet-card-desc">{{ sheet.descricao|default:'Sem descrição cadastrada.' }}</p>
+      <div class="sheet-card-meta" style="display:flex; justify-content:space-between; font-size:12px; color:#7a7a7a;">
+        <span>Criada {{ sheet.created_at|date:'d/m/Y' }}</span>
+        <span>Atualizada {{ sheet.updated_at|timesince }} atrás</span>
+      </div>
+      <div class="sheet-card-footer">
+        {% if sheet.template_type == 'contratos' %}
+          <a class="sheet-card-btn" href="{% url 'sheet_contratos_detail' sheet.id %}"><i class="fas fa-file-contract"></i> Abrir contratos</a>
+        {% elif sheet.template_type == 'produtos' %}
+          <a class="sheet-card-btn" href="{% url 'sheet_produtos_detail' sheet.id %}"><i class="fas fa-boxes"></i> Abrir produtos</a>
+        {% elif sheet.template_type == 'colaboradores' %}
+          <a class="sheet-card-btn" href="{% url 'sheet_colaboradores_detail' sheet.id %}"><i class="fas fa-user-friends"></i> Abrir colaboradores</a>
+        {% else %}
+          <a class="sheet-card-btn" href="{% url 'sheet_detail' sheet.id %}"><i class="fas fa-file-alt"></i> Abrir planilha</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="sheet-card-empty" style="text-align:center; padding:50px 20px; border:1px dashed #cfd3e5; border-radius:12px; color:#777; background:#fafbff;">
+    <i class="fas fa-table" style="font-size:36px; margin-bottom:12px;"></i>
+    <p>Nenhuma planilha criada nesta pasta.</p>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const searchInput = document.getElementById('sheetSearch');
+  const grid = document.getElementById('sheetsGrid');
+  if (!searchInput || !grid) return;
+  const cards = Array.from(grid.querySelectorAll('.sheet-card'));
+  const getTitle = (card) => card.querySelector('.sheet-card-title')?.textContent.trim().toLowerCase() || '';
+  searchInput.addEventListener('input', function(){
+    const q = this.value.trim().toLowerCase();
+    cards.forEach(card => {
+      const match = getTitle(card).includes(q);
+      card.style.display = match ? '' : 'none';
+    });
+  });
+})();
+</script>
+{% endblock %}

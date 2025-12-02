@@ -1,10 +1,115 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - Home{% endblock %}
-
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/home.css' %}?v=1.2">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        .board-info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .board-title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .board-title {
+            color: #302754;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+        }
+       .board-actions {
+            display: flex;
+            gap: 10px;
+        }
+                }
+
+        .board-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .meta-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .meta-value {
+            color: #302754;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Breadcrumb - mesmo estilo do board/detail (caso futuro queira ativar) */
+        .board-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .board-breadcrumb a { color: #333781; text-decoration: none; }
+        .board-breadcrumb a:hover { text-decoration: underline; }
+
+        /* Indicador de campos editáveis */
+        .editable-wrapper {
+            border-bottom: 2px dotted #b0b6ff;
+            cursor: text;
+        }
+        .editable-wrapper:focus {
+            outline: 2px solid #333781;
+            border-radius: 4px;
+            background: #f5f7ff;
+        }
+        .editable-wrapper.saving {
+            background: #fff8e1;
+        }
+        .editable-wrapper.saved {
+            background: #e8f5e9;
+        }
+
+        /* Meta section (sheet info) */
+        .sheet-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            margin: 8px 0 24px;
+        }
+        .sheet-meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 140px;
+        }
+        .sheet-meta-label {
+            font-size: 12px;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: #7a7d89;
+            font-weight: 600;
+        }
+        .sheet-meta-value {
+            font-size: 14px;
+            color: #302754;
+            font-weight: 600;
+        }
+    </style>
 {% endblock %}
 
 {% block page_title %}
@@ -12,19 +117,70 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Breadcrumb -->
+    <nav class="board-breadcrumb" aria-label="breadcrumb">
+        <i class="fas fa-home"></i><a href="/home/" title="Home">Início</a>
+        <i class="fas fa-chevron-right"></i>
+         <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+           <a href="{% url 'board_detail' workspace.id board.id %}">{{ board.nome }}</a>
+        <i class="fas fa-chevron-right"></i>
+          <span>{{ sheet.nome }}</span>
+    </nav>
+    <!-- Board Info -->
+    <div class="board-info-card">
+        <div class="board-title-section">
+            <h1 class="board-title editable-wrapper" contenteditable="true" data-sheet-id="{{ sheet.id }}">{{ sheet.nome }}</h1>
+            <div class="board-actions">
+                <button class="btn-action" onclick="editBoard()">
+                    <i class="fas fa-edit"></i>
+                    Editar
+                </button>
+                <button class="btn-action" style="color: #dc3545;" onclick="deleteBoard()">
+                    <i class="fas fa-trash"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+
+        <div class="sheet-meta">
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">Pasta</span>
+            <span class="sheet-meta-value">{{ sheet.nome }}</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">Tipo</span>
+            <span class="sheet-meta-value">
+                {% if sheet.template_type == 'contratos' %}Contratos{% elif sheet.template_type == 'produtos' %}Produtos{% elif sheet.template_type == 'colaboradores' %}Colaboradores{% else %}Genérico{% endif %}
+            </span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">Criado em</span>
+            <span class="sheet-meta-value">{{ sheet.created_at|date:'d/m/Y H:i' }}</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">Atualizado</span>
+            <span class="sheet-meta-value">{{ sheet.updated_at|date:'d/m/Y H:i' }}</span>
+        </div>
+        <div class="sheet-meta-item">
+            <span class="sheet-meta-label">Total Contratos</span>
+            <span class="sheet-meta-value">{{ contracts.count }}</span>
+        </div>
+    </div>
+    </div>
     <!-- Board Header -->
     <div class="board-header">
         <div class="board-title">
             <h2>Estrutura de Contratos</h2>
             <div class="board-actions">
                 <button class="btn-action" id="btnFiltrar" title="Filtros avançados">
-                    <i class="fas fa-filter"></i>
-                    Filtrar
+                    <i class="fa-etch fa-solid fa-comment"></i>
+                   Histórico e Comentários
                 </button>
-                <button class="btn-action" id="btnExportar" title="Exportar para Excel">
+<!--                 <button class="btn-action" id="btnExportar" title="Exportar para Excel">
                     <i class="fas fa-download"></i>
                     Exportar
-                </button>
+                </button> -->
                 <button class="btn-primary" id="btnNovoContrato">
                     <i class="fas fa-plus"></i>
                     Novo Contrato
@@ -132,7 +288,7 @@
                             <span class="element-number">{{ contract.id }}</span>
                         </td>
                         <td class="company-col">
-                            <span class="company-tag">{{ contract.empresa|default:'-' }}</span>
+                            <span class="company-tag editable-wrapper" contenteditable="true" data-field="empresa" data-contract-id="{{ contract.id }}">{{ contract.empresa|default:'-' }}</span>
                         </td>
                         <td class="status-col">
                             <select class="status-dropdown" data-contract-id="{{ contract.id }}" 
@@ -144,10 +300,10 @@
                             </select>
                         </td>
                         <td class="object-col">
-                            <span class="object-text">{{ contract.objeto|default:'-' }}</span>
+                            <span class="object-text editable-wrapper" contenteditable="true" data-field="objeto" data-contract-id="{{ contract.id }}">{{ contract.objeto|default:'-' }}</span>
                         </td>
                         <td class="qty-col">
-                            <span class="qty-value">{{ contract.qtd_total_itens|default:0 }}</span>
+                            <span class="qty-value editable-wrapper" contenteditable="true" data-field="qtd_total_itens" data-contract-id="{{ contract.id }}">{{ contract.qtd_total_itens|default:0 }}</span>
                         </td>
                         <td class="value-prev-col">
                             <span class="value-amount">R$ {{ contract.valor_total_anterior|default:0|floatformat:2 }}</span>
@@ -550,8 +706,15 @@
     <script type="module">
         import { getAuthHeaders } from '{% static "js/api/auth.js" %}';
 
-        // Quando houver contexto de planilha, usar para escopo
-        const SHEET_ID = Number('{{ sheet.id|default:"" }}') || null;
+        // Escopo: todas operações vinculadas à planilha atual
+        let SHEET_ID = Number('{{ sheet.id|default:"" }}') || null;
+        // Fallback: extrai da URL /sheet/<id>/contratos/
+        if (!SHEET_ID) {
+            const m = window.location.pathname.match(/\/sheet\/(\d+)\/contratos\//);
+            if (m) {
+                SHEET_ID = Number(m[1]);
+            }
+        }
 
         const API_SUBELEMENTS = '/api/v1/contratos-subelements/';
         const API_CONTRATOS = '/api/v1/contratos/';
@@ -589,6 +752,63 @@
             }
         };
 
+        // Salvar alterações inline dos campos editáveis
+        const saveInlineEdit = async (el) => {
+            const contractId = el.dataset.contractId;
+            const field = el.dataset.field;
+            if (!contractId || !field) return;
+
+            let raw = el.textContent.trim();
+            let value;
+            if (field === 'qtd_total_itens') {
+                const parsed = parseInt(raw.replace(/[^0-9-]/g, ''), 10);
+                value = Number.isNaN(parsed) ? 0 : parsed;
+            } else {
+                value = raw;
+            }
+
+            try {
+                el.classList.add('saving');
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+                const resp = await fetch(`${API_CONTRATOS}${contractId}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ [field]: value })
+                });
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Falha ao salvar alteração');
+                }
+                el.classList.remove('saving');
+                el.classList.add('saved');
+                setTimeout(() => el.classList.remove('saved'), 800);
+
+                // Atualiza totais se quantidade mudar
+                if (field === 'qtd_total_itens') {
+                    await updateContractSummary(contractId);
+                }
+            } catch (err) {
+                el.classList.remove('saving');
+                alert(`❌ Erro ao salvar: ${err.message}`);
+            }
+        };
+
+        // Inicializar handlers de edição inline
+        const initInlineEditable = () => {
+            document.querySelectorAll('.editable-wrapper[contenteditable="true"]').forEach(el => {
+                // Enter salva e evita quebra de linha
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        el.blur();
+                    }
+                });
+                // Blur salva
+                el.addEventListener('blur', () => saveInlineEdit(el));
+            });
+        };
+
         // Carregar subelementos
         const loadSubelements = async (contractId) => {
             const tbody = document.querySelector(`.subelements-body[data-contract-id="${contractId}"]`);
@@ -596,8 +816,7 @@
 
             try {
                 const headers = await getAuthHeaders();
-                const url = SHEET_ID ? `${API_SUBELEMENTS}?element=${contractId}&sheet=${SHEET_ID}` : `${API_SUBELEMENTS}?element=${contractId}`;
-                const response = await fetch(url, { headers });
+                const response = await fetch(`${API_SUBELEMENTS}?element=${contractId}&sheet=${SHEET_ID}`, { headers });
 
                 if (!response.ok) throw new Error('Erro ao carregar subelementos');
 
@@ -611,14 +830,24 @@
 
                 tbody.innerHTML = subelements.map(sub => `
                     <tr data-subelement-id="${sub.id}" style="border-bottom: 1px solid #e9ecef;">
-                        <td style="padding: 12px;">${sub.nome || '-'}</td>
-                        <td style="padding: 12px;">${sub.quantidade || 0}</td>
-                        <td style="padding: 12px;">${formatCurrency(sub.valor_unitario_anterior || 0)}</td>
+                        <td style="padding: 12px;">
+                            <span class="editable-wrapper" contenteditable="true" data-subelement-id="${sub.id}" data-contract-id="${contractId}" data-field="nome">${sub.nome || '-'}</span>
+                        </td>
+                        <td style="padding: 12px;">
+                            <span class="editable-wrapper" contenteditable="true" data-subelement-id="${sub.id}" data-contract-id="${contractId}" data-field="quantidade">${sub.quantidade || 0}</span>
+                        </td>
+                        <td style="padding: 12px;">
+                            <span class="editable-wrapper" contenteditable="true" data-subelement-id="${sub.id}" data-contract-id="${contractId}" data-field="valor_unitario_anterior">${formatCurrency(sub.valor_unitario_anterior || 0)}</span>
+                        </td>
                         <td style="padding: 12px; font-weight: 600;">${formatCurrency(sub.valor_total || 0)}</td>
-                        <td style="padding: 12px;">${sub.valor_ipca || 0}%</td>
+                        <td style="padding: 12px;">
+                            <span class="editable-wrapper" contenteditable="true" data-subelement-id="${sub.id}" data-contract-id="${contractId}" data-field="valor_ipca">${(sub.valor_ipca ?? 0)}</span>%
+                        </td>
                         <td style="padding: 12px; color: #28a745; font-weight: 600;">${formatCurrency(sub.valor_unitario_reajustado || 0)}</td>
                         <td style="padding: 12px; color: #28a745; font-weight: 600;">${formatCurrency(sub.valor_total_reajustado || 0)}</td>
-                        <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${sub.comentario || '-'}</td>
+                        <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                            <span class="editable-wrapper" contenteditable="true" data-subelement-id="${sub.id}" data-contract-id="${contractId}" data-field="comentario">${sub.comentario || '-'}</span>
+                        </td>
                         <td style="padding: 12px; text-align: center;">
                             <button class="delete-subelement-btn" data-subelement-id="${sub.id}" title="Excluir" style="background: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;">
                                 <i class="fas fa-trash"></i>
@@ -628,6 +857,7 @@
                 `).join('');
 
                 setupDeleteSubelementButtons();
+                initSubelementInlineEditable();
                 await updateContractSummary(contractId);
             } catch (error) {
                 tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 30px; color: #dc3545;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>Erro: ${error.message}</td></tr>`;
@@ -732,8 +962,7 @@
 
             try {
                 const headers = await getAuthHeaders();
-                const delUrl = SHEET_ID ? `${API_SUBELEMENTS}${subelementId}/?sheet=${SHEET_ID}` : `${API_SUBELEMENTS}${subelementId}/`;
-                const response = await fetch(delUrl, {
+                const response = await fetch(`${API_SUBELEMENTS}${subelementId}/?sheet=${SHEET_ID}`, {
                     method: 'DELETE',
                     headers
                 });
@@ -754,6 +983,64 @@
                     const contractId = this.closest('.subelements-body').dataset.contractId;
                     deleteSubelement(subelementId, contractId);
                 });
+            });
+        };
+
+        // Helpers numéricos
+        const parseNumber = (text) => {
+            if (typeof text !== 'string') text = String(text ?? '');
+            const cleaned = text.replace(/[^0-9,.-]/g, '').replace(',', '.');
+            const num = parseFloat(cleaned);
+            return Number.isNaN(num) ? 0 : num;
+        };
+
+        // Salvar edição inline para subelemento
+        const saveSubInlineEdit = async (el) => {
+            const subId = el.dataset.subelementId;
+            const contractId = el.dataset.contractId;
+            const field = el.dataset.field;
+            if (!subId || !field) return;
+
+            let valueRaw = el.textContent.trim();
+            let payloadValue = valueRaw;
+            if (['quantidade', 'valor_unitario_anterior', 'valor_ipca'].includes(field)) {
+                const numeric = parseNumber(valueRaw);
+                payloadValue = field === 'quantidade' ? parseInt(numeric, 10) || 0 : numeric;
+            }
+
+            try {
+                el.classList.add('saving');
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+                const resp = await fetch(`${API_SUBELEMENTS}${subId}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ [field]: payloadValue })
+                });
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Falha ao salvar alteração');
+                }
+                el.classList.remove('saving');
+                el.classList.add('saved');
+                setTimeout(() => el.classList.remove('saved'), 800);
+                // Recarrega a lista para refletir cálculos/valores derivados
+                await loadSubelements(contractId);
+            } catch (err) {
+                el.classList.remove('saving');
+                alert(`❌ Erro ao salvar: ${err.message}`);
+            }
+        };
+
+        const initSubelementInlineEditable = () => {
+            document.querySelectorAll('.subelements-body .editable-wrapper[contenteditable="true"]').forEach(el => {
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        el.blur();
+                    }
+                });
+                el.addEventListener('blur', () => saveSubInlineEdit(el));
             });
         };
 
@@ -779,6 +1066,48 @@
                 }
             });
         });
+
+        // Inicializa edição inline após montar tabela
+        initInlineEditable();
+
+        // Edição inline do título da planilha
+        const sheetTitleEl = document.querySelector('h1.board-title.editable-wrapper[data-sheet-id]');
+        const saveSheetTitle = async (el) => {
+            const id = el?.dataset?.sheetId;
+            if (!id) return;
+            const newName = el.textContent.trim();
+            if (!newName) return;
+            try {
+                el.classList.add('saving');
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+                const resp = await fetch(`/api/v1/sheet/${id}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ nome: newName })
+                });
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Falha ao salvar título da planilha');
+                }
+                el.classList.remove('saving');
+                el.classList.add('saved');
+                setTimeout(() => el.classList.remove('saved'), 800);
+                // Atualiza breadcrumb e título da aba
+                const crumbSheet = document.querySelector('.board-breadcrumb span');
+                if (crumbSheet) crumbSheet.textContent = newName;
+                document.title = `${newName} - Contratos`;
+            } catch (err) {
+                el.classList.remove('saving');
+                alert(`❌ Erro ao salvar título: ${err.message}`);
+            }
+        };
+        if (sheetTitleEl) {
+            sheetTitleEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); sheetTitleEl.blur(); }
+            });
+            sheetTitleEl.addEventListener('blur', () => saveSheetTitle(sheetTitleEl));
+        }
 
         // Adicionar subelemento
         document.querySelectorAll('.add-subelement-btn').forEach(btn => {
@@ -959,7 +1288,7 @@
                     method: 'POST',
                     headers,
                     body: JSON.stringify({
-                        ...(SHEET_ID ? { sheet: SHEET_ID } : {}),
+                        sheet: SHEET_ID,
                         empresa: empresa,
                         objeto: objeto,
                         status: status,
@@ -983,6 +1312,9 @@
             }
         });
 
+        window.editBoard = function() {
+        alert('Para editar o título da planilha basta clicar diretamente nela e renomear.');
+    };  
         // Variáveis de filtro globais
         let filtroStatusAtual = 'all';
         let filtroEmpresaAtual = 'all';
@@ -1216,7 +1548,7 @@
                     method: 'POST',
                     headers,
                     body: JSON.stringify({
-                        ...(SHEET_ID ? { sheet: SHEET_ID } : {}),
+                        sheet: SHEET_ID,
                         empresa: empresa,
                         objeto: objeto,
                         status: status,

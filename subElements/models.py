@@ -1,8 +1,9 @@
+from decimal import Decimal
+
 from django.db import models
-from elements.models import Element
-from products.models import Product
-from mixins.models import TimestampMixin, NotesMixin, ActiveMixin, SoftDeleteMixin
-from elements.models import ContratosElement
+
+from elements.models import ContratosElement, Element
+from mixins.models import ActiveMixin, NotesMixin, SoftDeleteMixin, TimestampMixin
 
 class SubElement(
     TimestampMixin,
@@ -52,10 +53,17 @@ class ContratosSubelement(models.Model):
     valor_total_reajustado = models.DecimalField(max_digits=15, decimal_places=2)
 
     def save(self, *args, **kwargs):
-        self.valor_total = self.quantidade * self.valor_unitario_anterior
-        self.valor_unitario_reajustado = self.valor_unitario_anterior + (self.valor_unitario_anterior * (self.valor_ipca / 100))
-        self.valor_total_reajustado = self.quantidade * self.valor_unitario_reajustado
+        quantidade = Decimal(self.quantidade or 0)
+        valor_unitario = Decimal(self.valor_unitario_anterior or 0)
+        ipca = Decimal(self.valor_ipca or 0)
+
+        self.valor_total = quantidade * valor_unitario
+        fator_reajuste = Decimal('1') + (ipca / Decimal('100'))
+        self.valor_unitario_reajustado = valor_unitario * fator_reajuste
+        self.valor_total_reajustado = quantidade * self.valor_unitario_reajustado
+
         super().save(*args, **kwargs)
+<<<<<<< HEAD
         if hasattr(self.element, 'atualizar_totais'):
             self.element.atualizar_totais()
 
@@ -63,6 +71,16 @@ class ContratosSubelement(models.Model):
         element = self.element
         super().delete(*args, **kwargs)
         if element and hasattr(element, 'atualizar_totais'):
+=======
+
+        if self.element_id:
+            self.element.atualizar_totais()
+
+    def delete(self, *args, **kwargs):
+        element = self.element if self.element_id else None
+        super().delete(*args, **kwargs)
+        if element:
+>>>>>>> 097a7b36037ca8e7c5fa6d1fab43538e5c3c1a4b
             element.atualizar_totais()
 
     class Meta:

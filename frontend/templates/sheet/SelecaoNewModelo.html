@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+  .sheet-breadcrumb {display:flex;align-items:center;gap:10px;margin-bottom:20px;color:#666;font-size:14px}
+  .sheet-breadcrumb a {color:#333781;text-decoration:none}
+  .sheet-breadcrumb a:hover {text-decoration:underline}
+  .selector-container {background:#fff;border-radius:10px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-width:960px;margin:0 auto}
+  .selector-title {margin:0 0 24px;font-size:26px;font-weight:600;color:#302754}
+  .template-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+  .template-link {display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;padding:22px;border:2px solid #e1e5e9;border-radius:10px;background:#f9faff;color:#302754;font-weight:600;text-decoration:none;transition:.25s all;position:relative;min-height:170px}
+  .template-link:hover {border-color:#333781;box-shadow:0 6px 16px rgba(51,55,129,.15);transform:translateY(-3px);background:#fff}
+  .template-link i {font-size:34px;color:#333781}
+  .template-desc {font-size:12px;font-weight:400;color:#666;text-align:center;line-height:1.4}
+  .actions-bar {margin-top:32px;display:flex;justify-content:flex-end}
+  .btn-cancel {padding:12px 30px;background:#6c757d;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-cancel:hover {background:#555d63}
+
+  /* DESABILITAR ITEM */
+    .template-link.disabled {
+    background:#f1f1f1;
+    color:#999;
+    border-color:#ddd;
+    cursor:not-allowed;
+    pointer-events:none; /* impede clique */
+  }
+  .template-link.disabled i {
+    color:#bbb;
+  }
+  .template-link.disabled:hover {
+    box-shadow:none;
+    transform:none;
+    background:#f1f1f1;
+  }
+</style>
+{% endblock %}
+
+{% block page_title %}Nova Planilha{% endblock %}
+
+{% block breadcrumb %}
+<div class="sheet-breadcrumb">
+  <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+  <i class="fas fa-chevron-right"></i>
+  {% if board %}
+    <a href="{% url 'board_detail' board.workspace.id board.id %}">{{ board.nome }}</a>
+    <i class="fas fa-chevron-right"></i>
+  {% endif %}
+  <span>Escolher modelo</span>
+  </div>
+{% endblock %}
+
+{% block content %}
+<div class="selector-container">
+  <h1 class="selector-title">Escolha o tipo de planilha</h1>
+  <div class="template-grid">
+    {% if board %}
+    <a class="template-link disabled" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=generico">
+      <i class="fas fa-table"></i>
+      <span>Genérico</span>
+      <div class="template-desc">Em breve: Estrutura livre e personalizável.</div>
+    </a>
+    <a class="template-link" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=contratos">
+      <i class="fas fa-file-contract"></i>
+      <span>Contratos</span>
+      <div class="template-desc">Gestão de contratos e itens vinculados.</div>
+    </a>
+    <a class="template-link disabled" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=colaboradores">
+      <i class="fas fa-users"></i>
+      <span>Colaboradores</span>
+      <div class="template-desc">Em breve: Organização de pessoas e cargos.</div>
+    </a>
+    <a class="template-link disabled" href="{% url 'new_sheet' %}?board={{ board.id }}&tipo=produtos">
+      <i class="fas fa-box"></i>
+      <span>Produtos</span>
+      <div class="template-desc">Em breve: Catálogo e detalhes de produtos.</div>
+    </a>
+    {% else %}
+    <div style="grid-column: 1/-1; color:#666;">Informe um board pela URL (?board=ID) para criar a planilha associada.</div>
+    {% endif %}
+  </div>
+  <div class="actions-bar">
+    <button type="button" class="btn-cancel" onclick="cancelSheet()">Voltar / Cancelar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.cancelSheet = function(){
+    {% if board %}
+      window.location.href = "{% url 'board_detail' board.workspace.id board.id %}";
+    {% else %}
+      window.location.href = "{% url 'workspace' %}";
+    {% endif %}
+  };
+</script>
+{% endblock %}

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ board.nome }} - Pasta{% endblock %}
+<!-- {% block title %}{{ board.nome }} - Pasta{% endblock %} -->
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
@@ -211,16 +211,57 @@
             background: #fafbff;
         }
 
+        /* Audit mode styles for showing delete buttons on sheets */
+        .audit-on .sheet-card { padding-bottom: 56px; position: relative; }
+        .sheet-delete {
+            display: none;
+            position: absolute;
+            right: 14px;
+            bottom: 14px;
+            background: #fff;
+            border: 1px solid #e1e5e9;
+            color: #c62828;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .audit-on .sheet-delete { display: inline-flex; }
+
+        /* Indicador de edição, igual ao título de Workspaces */
+        .editable-wrapper {
+            display: inline-block;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .editable-wrapper[contenteditable="true"] {
+            border-bottom: 2px dashed #333781;
+            padding: 0 4px;
+            outline: none;
+            cursor: text;
+        }
+
+        .editable-wrapper[contenteditable="true"]:focus {
+            border-bottom: 2px solid #333781;
+            background-color: rgba(51, 55, 129, 0.05);
+        }
+
     </style>
 {% endblock %}
 
 {% block page_title %}
-    {{ board.nome }}
+    {{ workspace.nome }}
 {% endblock %}
 
 {% block breadcrumb %}
     <div class="board-breadcrumb">
-        <a href="{% url 'workspace' %}"><i class="fas fa-home"></i> Workspaces</a>
+        <i class="fas fa-home"></i><a href="/home/" title="Home">Início</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'workspace' %}"></i> Workspaces</a>
         <i class="fas fa-chevron-right"></i>
         <a href="{% url 'workspace_detail' workspace.id %}">{{ workspace.nome }}</a>
         <i class="fas fa-chevron-right"></i>
@@ -232,15 +273,11 @@
     <!-- Board Info -->
     <div class="board-info-card">
         <div class="board-title-section">
-            <h1 class="board-title">{{ board.nome }}</h1>
+            <h1 class="board-title editable-wrapper" contenteditable="true" data-board-id="{{ board.id }}">{{ board.nome }}</h1>
             <div class="board-actions">
                 <button class="btn-action" onclick="editBoard()">
                     <i class="fas fa-edit"></i>
                     Editar
-                </button>
-                <button class="btn-action" onclick="shareBoard()">
-                    <i class="fas fa-share-alt"></i>
-                    Compartilhar
                 </button>
                 <button class="btn-action" style="color: #dc3545;" onclick="deleteBoard()">
                     <i class="fas fa-trash"></i>
@@ -279,6 +316,10 @@
                     <i class="fas fa-plus"></i>
                     Nova Planilha
                 </a>
+                <button id="auditToggleSheets" class="btn-action" title="Habilitar edição/auditoria" style="background:#f4f5f7; color:#333; border:1px solid #e1e5e9; padding:8px 14px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <i class="fas fa-shield-alt"></i>
+                    Auditoria
+                </button>
             </div>
         </div>
 
@@ -324,6 +365,7 @@
                                 </a>
                             {% endif %}
                         </div>
+                        <button class="sheet-delete" data-sheet-id="{{ sheet.id }}" title="Excluir planilha"><i class="fas fa-trash"></i> Excluir</button>
                     </div>
                 {% endfor %}
             </div>
@@ -350,7 +392,7 @@
     };
 
     window.editBoard = function() {
-        alert('Funcionalidade de edição será implementada');
+        alert('Para editar o título da pasta basta clicar diretamente nela e renomear.');
     };
 
     window.shareBoard = function() {
@@ -422,9 +464,9 @@
             targetGrid.innerHTML = data.map(s => `
                 <div class="sheet-card">
                     <div class="sheet-card-header">
-                        <h3 class="sheet-card-title">${s.nome || 'Sem nome'}</h3>
+                        <h3 class="sheet-card-title">${sheet.nome || 'Sem nome'}</h3>
                     </div>
-                    <p class="sheet-card-desc">${s.descricao || 'Sem descrição cadastrada.'}</p>
+                    <p class="sheet-card-desc">${sheet.descricao || 'Sem descrição cadastrada.'}</p>
                     <div class="sheet-card-meta">
                         <span>Criada ${(s.created_at || '').slice(0,10)}</span>
                         <span>Atualizada ${(s.updated_at || '').slice(0,10)}</span>
@@ -440,11 +482,115 @@
                                         : `<a class=\"sheet-card-btn\" href=\"/sheet/${s.id}/\"><i class=\\\"fas fa-file-alt\\\"></i> Abrir planilha</a>`
                         }
                     </div>
+                    <button class="sheet-delete" data-sheet-id="${s.id}" title="Excluir planilha"><i class=\"fas fa-trash\"></i> Excluir</button>
                 </div>
             `).join('');
         } catch(e) {
             console.warn('Falha ao carregar planilhas via API', e);
         }
+    })();
+
+    // Edição inline do título (editable-wrapper)
+    (function(){
+        const titleEl = document.querySelector('.editable-wrapper');
+        if (!titleEl) return;
+        const boardId = parseInt(titleEl.getAttribute('data-board-id') || '{{ board.id }}', 10);
+        let originalText = titleEl.textContent.trim();
+
+        const updateBreadcrumb = (newName) => {
+            const crumb = document.querySelector('.board-breadcrumb span:last-child');
+            if (crumb) crumb.textContent = newName;
+        };
+
+        const updateDocumentTitle = (newName) => {
+            try { document.title = `${newName} - Pasta`; } catch (_) {}
+        };
+
+        titleEl.addEventListener('focus', () => {
+            originalText = titleEl.textContent.trim();
+        });
+
+        titleEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                titleEl.blur();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                titleEl.textContent = originalText;
+                titleEl.blur();
+            }
+        });
+
+        titleEl.addEventListener('blur', async () => {
+            const newName = titleEl.textContent.trim();
+            if (newName === '') {
+                titleEl.textContent = originalText; // evita nome vazio
+                return;
+            }
+            if (newName === originalText) return; // nada mudou
+
+            try {
+                const { getAuthHeaders } = await import('{% static "js/api/auth.js" %}');
+                const headers = await getAuthHeaders();
+                headers['Content-Type'] = 'application/json';
+
+                const res = await fetch(`/api/v1/board/${boardId}/`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ nome: newName })
+                });
+
+                if (!res.ok) throw new Error('Falha ao atualizar nome');
+
+                originalText = newName;
+                updateBreadcrumb(newName);
+                updateDocumentTitle(newName);
+            } catch (err) {
+                console.error('Erro ao salvar título do board:', err);
+                alert('Não foi possível salvar o novo título.');
+                titleEl.textContent = originalText; // reverte
+            }
+        });
+    })();
+
+    // Auditoria: mostrar/ocultar botões de excluir planilhas e executar exclusão
+    (function(){
+        const section = document.querySelector('.sheets-section');
+        const toggle = document.getElementById('auditToggleSheets');
+        if (!section || !toggle) return;
+        let auditOn = false;
+
+        toggle.addEventListener('click', () => {
+            auditOn = !auditOn;
+            toggle.classList.toggle('active', auditOn);
+            toggle.innerHTML = auditOn ? '<i class="fas fa-shield-alt"></i> Auditoria ON' : '<i class="fas fa-shield-alt"></i> Auditoria';
+            section.classList.toggle('audit-on', auditOn);
+        });
+
+        section.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.sheet-delete');
+            if (!btn) return;
+            const sheetId = btn.getAttribute('data-sheet-id');
+            if (!sheetId) return;
+            if (!confirm('Tem certeza que deseja excluir esta planilha? Esta ação é permanente.')) return;
+            try {
+                const { getAuthHeaders } = await import('{% static "js/api/auth.js" %}');
+                const headers = await getAuthHeaders();
+                headers['Accept'] = 'application/json';
+                const resp = await fetch(`/api/v1/sheet/${sheetId}/`, { method: 'DELETE', headers });
+                if (resp.status === 204 || resp.status === 200) {
+                    const card = btn.closest('.sheet-card');
+                    card?.remove();
+                } else {
+                    const txt = await resp.text();
+                    console.error('Delete sheet failed:', txt);
+                    alert('Falha ao excluir planilha.');
+                }
+            } catch(err) {
+                console.error('Erro ao excluir planilha', err);
+                alert('Erro de rede ao excluir.');
+            }
+        });
     })();
 </script>
 {% endblock %}

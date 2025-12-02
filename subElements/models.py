@@ -63,15 +63,6 @@ class ContratosSubelement(models.Model):
         self.valor_total_reajustado = quantidade * self.valor_unitario_reajustado
 
         super().save(*args, **kwargs)
-<<<<<<< HEAD
-        if hasattr(self.element, 'atualizar_totais'):
-            self.element.atualizar_totais()
-
-    def delete(self, *args, **kwargs):
-        element = self.element
-        super().delete(*args, **kwargs)
-        if element and hasattr(element, 'atualizar_totais'):
-=======
 
         if self.element_id:
             self.element.atualizar_totais()
@@ -80,7 +71,6 @@ class ContratosSubelement(models.Model):
         element = self.element if self.element_id else None
         super().delete(*args, **kwargs)
         if element:
->>>>>>> 097a7b36037ca8e7c5fa6d1fab43538e5c3c1a4b
             element.atualizar_totais()
 
     class Meta:

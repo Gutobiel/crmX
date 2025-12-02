@@ -49,11 +49,6 @@ def jwt_required(view_func):
 def login_view(request):
     return render(request, 'login/login.html')
 
-<<<<<<< HEAD
-def home(request):
-    # Carregar todos os contratos para a página home
-    # Autenticação feita via JavaScript/API
-=======
 def root(request):
     # Se houver token nos cookies ou Authorization, tenta ir para home; senão, login
     auth_header = request.headers.get('Authorization')
@@ -70,7 +65,6 @@ def root(request):
 @jwt_required
 def home(request):
     # Carregar todos os contratos para a página home
->>>>>>> 097a7b36037ca8e7c5fa6d1fab43538e5c3c1a4b
     contratos = ContratosElement.objects.all().order_by('id')
     
     context = {

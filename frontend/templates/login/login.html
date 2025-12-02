@@ -6,7 +6,7 @@
     <title>ArcX - CRM </title>
     {% load static %}
     <link rel="shortcut icon" href="{% static 'assets/logo-arcx-3.png' %}" type="image/x-icon">
-    <link rel="stylesheet" href="{% static 'css/stylelogin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/stylelogin.css' %}?v=3.2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -14,13 +14,26 @@
 <body>
     <div class="login-container">
         <div class="login-card">
-            <div class="login-header">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                    <h1>CRM Gestão</h1>
+            <!-- Seção do Logo -->
+            <div class="login-logo-section">
+                <div class="brand-logo">
+                    <div class="logo-arcx">
+                        <span class="logo-text">ARCX</span>
+                        <span class="logo-subtitle">GESTÃO INTEGRADA</span>
+                    </div>
+                    <p class="brand-tagline">Transformando dados em decisões inteligentes</p>
                 </div>
-                <p class="subtitle">Gerencie seus negócios com inteligência</p>
             </div>
+            
+            <!-- Seção do Formulário -->
+            <div class="login-form-section">
+                <div class="login-header">
+                    <div class="logo">
+                        <i class="fas fa-chart-line"></i>
+                        <h1>Bem-vindo</h1>
+                    </div>
+                    <p class="subtitle">Faça login para continuar</p>
+                </div>
 
             <form class="login-form" id="loginForm">
                 <div class="form-group">
@@ -78,8 +91,9 @@
                     <p>Não tem uma conta? <a href="#">Criar conta</a></p>
                 </div>
             </form>
+            </div>
         </div>
-
+        
         <!-- Logo fixo no canto superior esquerdo -->
         <div class="top-logo">
             <i class="fas fa-chart-line"></i>
@@ -87,6 +101,6 @@
         </div>
     </div>
 
-</body>
     <script src="{% static 'js/login.js' %}" type="module"></script>
+</body>
 </html>

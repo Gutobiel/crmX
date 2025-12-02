@@ -38,12 +38,12 @@ class ContratosElement(models.Model):
         aggregates = self.subElements.aggregate(
             total_anterior=Sum('valor_total'),
             total_reajustado=Sum('valor_total_reajustado'),
-            total_quantidade=Sum('quantidade')
+            quantidade_total=Sum('quantidade'),
         )
 
-        self.valor_total_anterior = aggregates['total_anterior'] or Decimal('0')
-        self.valor_total_reajustado = aggregates['total_reajustado'] or Decimal('0')
-        self.qtd_total_itens = aggregates['total_quantidade'] or 0
+        self.valor_total_anterior = aggregates.get('total_anterior') or 0
+        self.valor_total_reajustado = aggregates.get('total_reajustado') or 0
+        self.qtd_total_itens = aggregates.get('quantidade_total') or 0
         self.save(update_fields=['valor_total_anterior', 'valor_total_reajustado', 'qtd_total_itens'])
 
 

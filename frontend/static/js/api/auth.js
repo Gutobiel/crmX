@@ -1,6 +1,26 @@
 // static/js/api/auth.js
 const API_BASE_URL = '/api/v1';
 const LOGIN_URL = `${API_BASE_URL}/authentication/token/`;
+
+export async function login(usernameOrEmail, password) {
+    try {
+        const response = await axios.post(LOGIN_URL, {
+            username: usernameOrEmail,
+            password: password
+        });
+
+        const { access, refresh } = response.data;
+
+        // Salva tokens localmente
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+
+        // Return the tokens directly
+        return { access, refresh };
+    } catch (error) {
+        console.error('Erro no login:', error.response?.data || error.message);
+        // Lança o erro para que o código chamador possa tratá-lo
+        throw error;
 const REFRESH_URL = `${API_BASE_URL}/authentication/token/refresh/`;
 
 // Dias máximos de validade do refresh (ex: 30 dias)
@@ -87,6 +107,7 @@ export function isAuthenticated() {
     return !!getAccessToken();
 }
 
+// Função para obter headers de autenticação
 // Tenta renovar o access token usando o refresh
 export async function refreshToken() {
     const refresh = getRefreshToken();
@@ -119,13 +140,13 @@ export async function refreshToken() {
 // Headers para fetch simples
 export async function getAuthHeaders() {
     const token = getAccessToken();
-    const headers = {
+    if (!token) {
+        console.error('⚠️ Token não encontrado! Faça login novamente.');
+    }
+    return {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
     };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
 }
 
 // Instância Axios autenticada (não obrigatória)
@@ -240,6 +261,7 @@ const auth = {
     logout,
     getAccessToken,
     isAuthenticated,
+    getAuthHeaders,
     createAuthenticatedAxios,
     getAuthHeaders,
     refreshToken,

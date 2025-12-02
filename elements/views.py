@@ -37,6 +37,12 @@ class ContratosElementViewSet(viewsets.ModelViewSet):
             serializer.save()
         else:
             serializer.save()
+    
+    def perform_update(self, serializer):
+        # Salva as alterações editáveis (empresa, objeto, status)
+        instance = serializer.save()
+        # Recalcula os totais automaticamente após edição
+        instance.atualizar_totais()
 
 
 class ElementCollaboratorViewSet(viewsets.ModelViewSet):

@@ -132,7 +132,11 @@
                             <span class="element-number">{{ contract.id }}</span>
                         </td>
                         <td class="company-col">
-                            <span class="company-tag">{{ contract.empresa|default:'-' }}</span>
+                            <span class="company-tag editable-field" 
+                                  data-contract-id="{{ contract.id }}" 
+                                  data-field="empresa" 
+                                  title="Clique duas vezes para editar" 
+                                  style="cursor: pointer;">{{ contract.empresa|default:'-' }}</span>
                         </td>
                         <td class="status-col">
                             <select class="status-dropdown" data-contract-id="{{ contract.id }}" 
@@ -144,7 +148,11 @@
                             </select>
                         </td>
                         <td class="object-col">
-                            <span class="object-text">{{ contract.objeto|default:'-' }}</span>
+                            <span class="object-text editable-field" 
+                                  data-contract-id="{{ contract.id }}" 
+                                  data-field="objeto" 
+                                  title="Clique duas vezes para editar" 
+                                  style="cursor: pointer;">{{ contract.objeto|default:'-' }}</span>
                         </td>
                         <td class="qty-col">
                             <span class="qty-value">{{ contract.qtd_total_itens|default:0 }}</span>
@@ -846,6 +854,95 @@
 
             // Salvar status inicial
             dropdown.dataset.previousStatus = dropdown.value;
+        });
+
+        // Edição inline de empresa e objeto
+        document.querySelectorAll('.editable-field').forEach(field => {
+            field.addEventListener('dblclick', function() {
+                const contractId = this.dataset.contractId;
+                const fieldName = this.dataset.field;
+                const currentValue = this.textContent.trim();
+                const originalValue = currentValue === '-' ? '' : currentValue;
+
+                // Criar input para edição
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = originalValue;
+                input.style.cssText = 'width: 100%; padding: 6px 10px; border: 2px solid #667eea; border-radius: 4px; font-size: 13px; font-family: inherit; box-shadow: 0 0 0 3px rgba(102,126,234,0.1);';
+                
+                // Substituir span por input
+                const parent = this.parentElement;
+                const span = this;
+                parent.replaceChild(input, span);
+                input.focus();
+                input.select();
+
+                // Função para salvar alterações
+                const saveChanges = async () => {
+                    const newValue = input.value.trim();
+                    
+                    // Se não mudou, apenas restaurar
+                    if (newValue === originalValue) {
+                        parent.replaceChild(span, input);
+                        return;
+                    }
+
+                    // Validação básica
+                    if (newValue === '') {
+                        alert('❌ O campo não pode ficar vazio!');
+                        input.focus();
+                        return;
+                    }
+
+                    try {
+                        const headers = await getAuthHeaders();
+                        headers['Content-Type'] = 'application/json';
+
+                        const response = await fetch(`${API_CONTRATOS}${contractId}/`, {
+                            method: 'PATCH',
+                            headers,
+                            body: JSON.stringify({
+                                [fieldName]: newValue
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || 'Erro ao atualizar campo');
+                        }
+
+                        // Atualizar valor no span
+                        span.textContent = newValue;
+                        parent.replaceChild(span, input);
+
+                        // Feedback visual
+                        const row = parent.closest('tr');
+                        row.style.transition = 'background-color 0.3s';
+                        row.style.backgroundColor = '#e8f5e9';
+                        setTimeout(() => {
+                            row.style.backgroundColor = '';
+                        }, 800);
+
+                    } catch (error) {
+                        alert(`❌ Erro ao atualizar ${fieldName}: ${error.message}`);
+                        input.focus();
+                    }
+                };
+
+                // Salvar ao perder foco
+                input.addEventListener('blur', saveChanges);
+
+                // Salvar ao pressionar Enter
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveChanges();
+                    } else if (e.key === 'Escape') {
+                        // Cancelar edição com ESC
+                        parent.replaceChild(span, input);
+                    }
+                });
+            });
         });
 
         // Expandir/colapsar subelementos (código antigo para compatibilidade)

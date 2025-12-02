@@ -15,36 +15,18 @@ export async function login(usernameOrEmail, password) {
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
 
-        // Também salva em cookie para que o servidor (views Django) consiga ler o token
-        // Usa cookie de sessão (sem Max-Age) para expirar ao fechar o navegador
-        try {
-            const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
-            document.cookie = `access=${access}; Path=/; SameSite=Lax${secureFlag}`;
-        } catch (e) {
-            console.warn('Não foi possível setar cookie de acesso:', e);
-        }
-
         // Return the tokens directly
         return { access, refresh };
     } catch (error) {
         console.error('Erro no login:', error.response?.data || error.message);
-        return {
-            success: false,
-            error: error.response?.data?.detail || 'Erro ao fazer login. Verifique suas credenciais.'
-        };
+        // Lança o erro para que o código chamador possa tratá-lo
+        throw error;
     }
 }
 
 export function logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    try {
-        // Remove o cookie de acesso
-        document.cookie = 'access=; Path=/; Max-Age=0; SameSite=Lax';
-        document.cookie = 'access_token=; Path=/; Max-Age=0; SameSite=Lax';
-    } catch (e) {
-        console.warn('Não foi possível remover cookie de acesso:', e);
-    }
 }
 
 export function getAccessToken() {
@@ -55,16 +37,16 @@ export function isAuthenticated() {
     return !!getAccessToken();
 }
 
-// Retorna o objeto de headers padrão com Authorization se houver token
+// Função para obter headers de autenticação
 export async function getAuthHeaders() {
     const token = getAccessToken();
-    const headers = {
+    if (!token) {
+        console.error('⚠️ Token não encontrado! Faça login novamente.');
+    }
+    return {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
     };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
 }
 
 // Exemplo opcional de helper: cria uma instância Axios autenticada
@@ -83,8 +65,8 @@ const auth = {
     logout,
     getAccessToken,
     isAuthenticated,
-    createAuthenticatedAxios,
     getAuthHeaders,
+    createAuthenticatedAxios,
 };
 
 // Setup axios interceptors for authentication

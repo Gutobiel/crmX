@@ -49,9 +49,15 @@ def jwt_required(view_func):
 def login_view(request):
     return render(request, 'login/login.html')
 
-@jwt_required
 def home(request):
-    return render(request, 'home/home.html')
+    # Carregar todos os contratos para a página home
+    # Autenticação feita via JavaScript/API
+    contratos = ContratosElement.objects.all().order_by('id')
+    
+    context = {
+        'contracts': contratos,
+    }
+    return render(request, 'home/home.html', context)
 
 
 
@@ -157,6 +163,7 @@ def sheet_detail2(request):
         'board': board,
         'workspace': workspace,
         'contratos': contratos_qs.order_by('id'),
+        
         'form': form,
         'can_add_contrato': available_targets,
         'show_board_field': board is None,

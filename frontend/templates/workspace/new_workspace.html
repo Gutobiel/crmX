@@ -118,8 +118,8 @@
                     body: JSON.stringify({ nome })
                 });
 
+                const data = await response.json();
                 if (!response.ok) {
-                    const data = await response.json();
                     if (data.nome) {
                         this.showError(data.nome[0]);
                     } else {
@@ -128,8 +128,7 @@
                     return;
                 }
 
-                const workspace = await response.json();
-                window.location.href = `/board/new/`;
+                window.location.href = `/board/new/?workspace=${data.id}`;
 
             } catch (error) {
                 console.error('Erro ao criar workspace:', error);

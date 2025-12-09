@@ -321,7 +321,7 @@ def new_sheet(request):
     if not board:
         return redirect('workspace')
     
-    return render(request, 'sheet/new.html', {
+    return render(request, 'sheet/NovoModelo.html', {
         'board': board,
         'workspace': board.workspace,
     })

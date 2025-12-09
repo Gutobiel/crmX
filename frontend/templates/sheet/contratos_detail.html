@@ -303,7 +303,7 @@
                             <span class="object-text editable-wrapper" contenteditable="true" data-field="objeto" data-contract-id="{{ contract.id }}">{{ contract.objeto|default:'-' }}</span>
                         </td>
                         <td class="qty-col">
-                            <span class="qty-value editable-wrapper" contenteditable="true" data-field="qtd_total_itens" data-contract-id="{{ contract.id }}">{{ contract.qtd_total_itens|default:0 }}</span>
+                            <span class="qty-value" data-field="qtd_total_itens" data-contract-id="{{ contract.id }}">{{ contract.qtd_total_itens|default:0 }}</span>
                         </td>
                         <td class="value-prev-col">
                             <span class="value-amount">R$ {{ contract.valor_total_anterior|default:0|floatformat:2 }}</span>

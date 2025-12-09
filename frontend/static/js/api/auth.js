@@ -2,25 +2,28 @@
 const API_BASE_URL = '/api/v1';
 const LOGIN_URL = `${API_BASE_URL}/authentication/token/`;
 
-export async function login(usernameOrEmail, password) {
-    try {
-        const response = await axios.post(LOGIN_URL, {
-            username: usernameOrEmail,
-            password: password
-        });
+// export async function login(usernameOrEmail, password) {
+//     try {
+//         const response = await axios.post(LOGIN_URL, {
+//             username: usernameOrEmail,
+//             password: password
+//         });
 
-        const { access, refresh } = response.data;
+//         const { access, refresh } = response.data;
 
-        // Salva tokens localmente
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
+//         // Salva tokens localmente
+//         localStorage.setItem('access_token', access);
+//         localStorage.setItem('refresh_token', refresh);
 
-        // Return the tokens directly
-        return { access, refresh };
-    } catch (error) {
-        console.error('Erro no login:', error.response?.data || error.message);
-        // Lança o erro para que o código chamador possa tratá-lo
-        throw error;
+//         // Return the tokens directly
+//         return { access, refresh };
+//     } catch (error) {
+//         console.error('Erro no login:', error.response?.data || error.message);
+//         // Lança o erro para que o código chamador possa tratá-lo
+//         throw error;
+//     }
+// }
+
 const REFRESH_URL = `${API_BASE_URL}/authentication/token/refresh/`;
 
 // Dias máximos de validade do refresh (ex: 30 dias)
